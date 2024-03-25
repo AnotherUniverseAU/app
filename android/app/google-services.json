@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "678052476020",
+    "project_id": "anotheruniverse-c0ad1",
+    "storage_bucket": "anotheruniverse-c0ad1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678052476020:android:d7f77fc36d3f4c501f0d21",
+        "android_client_info": {
+          "package_name": "com.au"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6grB3BxFqZn-fSHW9UhOTZs5nfkZO2so"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
