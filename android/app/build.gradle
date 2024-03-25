@@ -1,6 +1,8 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply plugin: "com.google.gms.google-services" // 추가
+apply plugin: 'com.google.firebase.crashlytics' //추가
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -114,6 +116,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    implementation platform('com.google.firebase:firebase-bom:32.3.1') // 추가
+	implementation 'com.google.firebase:firebase-messaging' // 추가
 }
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)

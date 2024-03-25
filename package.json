@@ -12,14 +12,14 @@
   "dependencies": {
     "@react-native-firebase/app": "^19.1.0",
     "@react-native-firebase/messaging": "^19.1.0",
-    "react": "18.2.0",
+    "react": "^18.2.0",
     "react-native": "^0.73.6",
-    "react-native-webview": "^11.23.1"
+    "react-native-webview": "^13.8.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@babel/preset-env": "^7.20.0",
-    "@babel/runtime": "^7.20.0",
+    "@babel/runtime": "^7.24.1",
     "@react-native/babel-preset": "0.73.21",
     "@react-native/eslint-config": "0.73.2",
     "@react-native/metro-config": "0.73.5",
