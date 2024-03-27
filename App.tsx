@@ -23,27 +23,27 @@ const App = () => {
     const authStatus = await messaging().requestPermission();
     console.log('Authorization status:', authStatus);
 
-    // // 알림 권한을 거부한 경우
-    // if (
-    //   authStatus === messaging.AuthorizationStatus.DENIED ||
-    //   authStatus === messaging.AuthorizationStatus.NOT_DETERMINED
-    // ) {
-    //   Alert.alert(
-    //     '알림 권한 거부',
-    //     '정말로 알림 권한을 거절하시겠습니까? 알림을 허용하면 중요한 정보를 놓치지 않습니다.',
-    //     [
-    //       {
-    //         text: '다시 생각하기',
-    //         onPress: () => requestUserPermission(), // 권한 요청 함수를 다시 호출
-    //         style: 'cancel',
-    //       },
-    //       {
-    //         text: '거절하기',
-    //         onPress: () => console.log('알림 권한 거부됨'),
-    //       },
-    //     ],
-    //   );
-    // }
+    // 알림 권한을 거부한 경우
+    if (
+      authStatus === messaging.AuthorizationStatus.DENIED ||
+      authStatus === messaging.AuthorizationStatus.NOT_DETERMINED
+    ) {
+      Alert.alert(
+        '알림 권한 거부',
+        '정말로 알림 권한을 거절하시겠습니까? 알림을 허용하면 중요한 정보를 놓치지 않습니다.',
+        [
+          {
+            text: '다시 생각하기',
+            onPress: () => requestUserPermission(), // 권한 요청 함수를 다시 호출
+            style: 'cancel',
+          },
+          {
+            text: '거절하기',
+            onPress: () => console.log('알림 권한 거부됨'),
+          },
+        ],
+      );
+    }
   };
   /**
    * FCM 토큰을 받습니다.
@@ -93,7 +93,7 @@ const App = () => {
     <SafeAreaView style={styles.flexContainer}>
       <WebView
         // source={{uri: 'http://10.0.2.2:3000/tokentest'}} // 안드로이드 에뮬레이터
-        source={{uri: 'http://localhost:3000/tokentest'}} // ios 에뮬레이터
+        source={{uri: 'http://localhost:3000/'}} // ios 에뮬레이터
         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest} // iOS에서 사용
         shouldOverrideUrlLoading={handleShouldStartLoadWithRequest} // Android에서 사용
       />
