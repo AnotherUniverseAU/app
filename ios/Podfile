@@ -28,8 +28,6 @@ end
 
 target 'AU' do
   config = use_native_modules!
-
-
   pod 'FirebaseAuth' 
   pod 'FirebaseFirestore'
   
