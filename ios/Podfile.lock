@@ -2053,10 +2053,10 @@ PODS:
   - RecaptchaInterop (100.0.0)
   - RNCPushNotificationIOS (1.11.0):
     - React-Core
-  - RNFBApp (19.1.0):
+  - RNFBApp (19.1.1):
     - Firebase/CoreOnly (= 10.23.0)
     - React-Core
-  - RNFBMessaging (19.1.0):
+  - RNFBMessaging (19.1.1):
     - Firebase/Messaging (= 10.23.0)
     - FirebaseCoreExtension (= 10.23.0)
     - React-Core
@@ -2332,8 +2332,8 @@ SPEC CHECKSUMS:
   ReactCommon: e168ee1704806f10f47ee8c7f825b5850b18eaea
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
   RNCPushNotificationIOS: 64218f3c776c03d7408284a819b2abfda1834bc8
-  RNFBApp: a0618c20c09e0e0df667c3543c18062287848510
-  RNFBMessaging: 15439cf96be05b47d95334052afc306eac89c2ce
+  RNFBApp: 6d8509c5bb19b8788fee4f6a1f5d481aff20f15a
+  RNFBMessaging: e1d20e5d9d3331c7120e3719ac3266ffd50d6df1
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 805bf71192903b20fc14babe48080582fee65a80
 
