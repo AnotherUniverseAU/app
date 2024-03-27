@@ -2051,6 +2051,8 @@ PODS:
     - React-logger (= 0.73.6)
     - React-perflogger (= 0.73.6)
   - RecaptchaInterop (100.0.0)
+  - RNCPushNotificationIOS (1.11.0):
+    - React-Core
   - RNFBApp (19.1.0):
     - Firebase/CoreOnly (= 10.23.0)
     - React-Core
@@ -2116,6 +2118,7 @@ DEPENDENCIES:
   - React-runtimescheduler (from `../node_modules/react-native/ReactCommon/react/renderer/runtimescheduler`)
   - React-utils (from `../node_modules/react-native/ReactCommon/react/utils`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - "RNCPushNotificationIOS (from `../node_modules/@react-native-community/push-notification-ios`)"
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -2246,6 +2249,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/react/utils"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  RNCPushNotificationIOS:
+    :path: "../node_modules/@react-native-community/push-notification-ios"
   RNFBApp:
     :path: "../node_modules/@react-native-firebase/app"
   RNFBMessaging:
@@ -2326,11 +2331,12 @@ SPEC CHECKSUMS:
   React-utils: a45dd70919baff681d43a4a457e9884ef96b4581
   ReactCommon: e168ee1704806f10f47ee8c7f825b5850b18eaea
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
+  RNCPushNotificationIOS: 64218f3c776c03d7408284a819b2abfda1834bc8
   RNFBApp: a0618c20c09e0e0df667c3543c18062287848510
   RNFBMessaging: 15439cf96be05b47d95334052afc306eac89c2ce
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 805bf71192903b20fc14babe48080582fee65a80
 
-PODFILE CHECKSUM: 94a307c4bd7824aafc5697bc1b9fc357b22f1c2a
+PODFILE CHECKSUM: 32d3f512bfe2c29f80e1800c25bfa68055d3e823
 
 COCOAPODS: 1.15.2
