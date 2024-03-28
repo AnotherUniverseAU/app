@@ -9,11 +9,10 @@ const App = () => {
     requestUserPermission();
     getFcmToken();
 
-    // // Foreground에서 FCM 알림 수신
-    // messaging().onMessage(async remoteMessage => {
-    //   console.log('Received in foreground:', remoteMessage);
-    //   showAlert(remoteMessage);
-    // });
+    // Foreground에서 FCM 알림 수신
+    messaging().onMessage(async remoteMessage => {
+      console.log('Received in foreground:', remoteMessage);
+    });
   }, []);
 
   /**
@@ -29,17 +28,18 @@ const App = () => {
       authStatus === messaging.AuthorizationStatus.NOT_DETERMINED
     ) {
       Alert.alert(
-        '알림 권한 거부',
-        '정말로 알림 권한을 거절하시겠습니까? 알림을 허용하면 중요한 정보를 놓치지 않습니다.',
+        '알림을 허용해주세요',
+        '알림을 허용해야 캐릭터와의 채팅을 받아볼 수 있어요',
         [
-          {
-            text: '다시 생각하기',
-            onPress: () => requestUserPermission(), // 권한 요청 함수를 다시 호출
-            style: 'cancel',
-          },
           {
             text: '거절하기',
             onPress: () => console.log('알림 권한 거부됨'),
+            style: 'cancel',
+          },
+          {
+            text: '허용하기',
+            onPress: async () =>
+              await messaging().requestPermission({alert: true}),
           },
         ],
       );
@@ -60,18 +60,6 @@ const App = () => {
       console.log('FCM 토큰을 받는 데 실패했습니다.', error);
     }
   };
-
-  // /**
-  //  * 받은 메시지를 사용자에게 알림으로 보여주는 함수입니다.
-  //  */
-  // const showAlert = (remoteMessage: any) => {
-  //   console.log('remoteMessage:', remoteMessage);
-  //   Alert.alert(
-  //     remoteMessage.notification.title,
-  //     remoteMessage.notification.body,
-  //     [{text: 'OK', onPress: () => console.log('Alert closed')}],
-  //   );
-  // };
 
   // 커스텀 URL 스키마를 처리하는 함수
   const handleShouldStartLoadWithRequest = (request: any) => {
