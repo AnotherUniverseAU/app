@@ -1,12 +1,17 @@
 /**
  * @format
- */
+ **/
 
 import messaging from '@react-native-firebase/messaging';
 import {AppRegistry} from 'react-native';
 import App from './App';
 import {name as appName} from './app.json';
 import PushNotification from 'react-native-push-notification';
+
+// Register background handler
+messaging().setBackgroundMessageHandler(async remoteMessage => {
+  console.log('Message handled in the backgroundin ios!', remoteMessage);
+});
 
 // 알림 채널 생성
 PushNotification.createChannel(

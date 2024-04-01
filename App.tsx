@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {SafeAreaView, StyleSheet, Linking, Alert} from 'react-native';
+import {SafeAreaView, StyleSheet, Linking, Alert, Platform} from 'react-native';
 import {WebView} from 'react-native-webview';
 import messaging from '@react-native-firebase/messaging';
 import PushNotification from 'react-native-push-notification';
@@ -27,22 +27,20 @@ const App = () => {
       authStatus === messaging.AuthorizationStatus.DENIED ||
       authStatus === messaging.AuthorizationStatus.NOT_DETERMINED
     ) {
-      Alert.alert(
-        '알림을 허용해주세요',
-        '알림을 허용해야 캐릭터와의 채팅을 받아볼 수 있어요',
-        [
-          {
-            text: '거절하기',
-            onPress: () => console.log('알림 권한 거부됨'),
-            style: 'cancel',
-          },
-          {
-            text: '허용하기',
-            onPress: async () =>
-              await messaging().requestPermission({alert: true}),
-          },
-        ],
-      );
+      // iOS에서 알림 권한이 거부된 경우
+      if (Platform.OS === 'ios') {
+        Alert.alert(
+          '알림을 허용해주세요',
+          '설정 > 알림 > [앱 이름]으로 이동하여 알림을 허용해주세요.',
+          [
+            {
+              text: '설정으로 이동',
+              onPress: () => Linking.openURL('app-settings:'),
+            },
+            {text: '취소', style: 'cancel'},
+          ],
+        );
+      }
     }
   };
   /**
@@ -81,7 +79,8 @@ const App = () => {
     <SafeAreaView style={styles.flexContainer}>
       <WebView
         // source={{uri: 'http://10.0.2.2:3000/tokentest'}} // 안드로이드 에뮬레이터
-        source={{uri: 'http://localhost:3000/'}} // ios 에뮬레이터
+        // source={{uri: 'http://127.0.0.1:3000/'}} // ios 에뮬레이터
+        source={{uri: 'https://dhapdhap123.github.io/'}} // 테스트 배포 주소
         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest} // iOS에서 사용
         shouldOverrideUrlLoading={handleShouldStartLoadWithRequest} // Android에서 사용
       />
