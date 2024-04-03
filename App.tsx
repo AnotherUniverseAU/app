@@ -1,12 +1,25 @@
 import React, {useEffect} from 'react';
-import {SafeAreaView, StyleSheet, Linking, Alert, Platform} from 'react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Linking,
+  Alert,
+  Platform,
+  PermissionsAndroid,
+} from 'react-native';
 import {WebView} from 'react-native-webview';
 import messaging from '@react-native-firebase/messaging';
-import PushNotification from 'react-native-push-notification';
+import PermissionUtil from './PermissionUtil.tsx';
 
 const App = () => {
   useEffect(() => {
-    requestUserPermission();
+    if (Platform.OS === 'android') {
+      requestNotificationPermissionForAndroid();
+    } else {
+      // iOS 알림 권한 요청 로직
+      requestUserPermission();
+    }
+
     getFcmToken();
 
     // Foreground에서 FCM 알림 수신
@@ -15,8 +28,41 @@ const App = () => {
     });
   }, []);
 
+  // 안드로이드 13 이상일 경우 알림 권한 요청
+  const requestNotificationPermissionForAndroid = async () => {
+    if (Number(Platform.Version) >= 33) {
+      // 안드로이드 13(API 수준 33) 이상인 경우
+      const status = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      );
+
+      if (status === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('알림 권한 허용됨');
+      } else {
+        // 권한 거부 시 설정으로 이동하는 모달 표시
+        Alert.alert(
+          '알림 권한 거부됨',
+          '알림을 받기 위해서는 알림 권한이 필요합니다. 설정에서 알림 권한을 허용해주세요.',
+          [
+            {
+              text: '설정으로 이동',
+              onPress: () => Linking.openSettings(), // 사용자를 앱의 설정 페이지로 이동
+            },
+            {text: '나중에 하기', style: 'cancel'},
+          ],
+          {cancelable: false},
+        );
+      }
+    } else {
+      // 안드로이드 13 미만 버전에서는 별도의 권한 요청 없이 진행
+      console.log(
+        '안드로이드 버전이 13 미만입니다. 별도의 알림 권한 요청이 필요하지 않습니다.',
+      );
+    }
+  };
+
   /**
-   * 사용자에게 알림 권한을 요청합니다.
+   * iOS 사용자에게 알림 권한을 요청합니다.
    */
   const requestUserPermission = async () => {
     const authStatus = await messaging().requestPermission();
@@ -31,7 +77,7 @@ const App = () => {
       if (Platform.OS === 'ios') {
         Alert.alert(
           '알림을 허용해주세요',
-          '설정 > 알림 > [앱 이름]으로 이동하여 알림을 허용해주세요.',
+          '설정 > 알림 > AU 으로 이동하여 알림을 허용해주세요.',
           [
             {
               text: '설정으로 이동',
@@ -75,14 +121,28 @@ const App = () => {
     );
   };
 
+  // 메시지 처리 함수 수정
+  const onMessage = async (event: any) => {
+    const message = JSON.parse(event.nativeEvent.data);
+
+    if (message.type === 'REQUEST_PERMISSIONS') {
+      // PermissionUtil을 사용하여 권한 요청
+      PermissionUtil.cmmReqCameraPermission().finally(() => {
+        //카메라 권한 요청
+        PermissionUtil.cmmReqPhotoLibraryPermission(); //사진첩 권한 요청
+      });
+    }
+  };
+
   return (
     <SafeAreaView style={styles.flexContainer}>
       <WebView
-        // source={{uri: 'http://10.0.2.2:3000/tokentest'}} // 안드로이드 에뮬레이터
-        // source={{uri: 'http://127.0.0.1:3000/'}} // ios 에뮬레이터
-        source={{uri: 'https://dhapdhap123.github.io/'}} // 테스트 배포 주소
+        // source={{uri: 'http://10.0.2.2:3000/'}} // 안드로이드 에뮬레이터
+        source={{uri: 'http://127.0.0.1:3000/'}} // ios 에뮬레이터
+        // source={{uri: 'https://dhapdhap123.github.io/'}} // 테스트 배포 주소
         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest} // iOS에서 사용
         shouldOverrideUrlLoading={handleShouldStartLoadWithRequest} // Android에서 사용
+        onMessage={onMessage}
       />
     </SafeAreaView>
   );
