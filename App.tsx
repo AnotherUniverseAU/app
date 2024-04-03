@@ -8,30 +8,39 @@ import {
   PermissionsAndroid,
 } from 'react-native';
 import {WebView} from 'react-native-webview';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
 import PermissionUtil from './PermissionUtil.tsx';
 
 const App = () => {
   useEffect(() => {
-    if (Platform.OS === 'android') {
-      requestNotificationPermissionForAndroid();
-    } else {
-      // iOS 알림 권한 요청 로직
-      requestUserPermission();
-    }
+    AsyncStorage.getItem('isFirstAccess').then(value => {
+      if (value === null) {
+        console.log('처음 접속하는 유저입니다');
+        if (Platform.OS === 'android') {
+          requestPushPermissionForAndroid();
+        } else {
+          reRequestPushPermissionForiOS();
+        }
+        AsyncStorage.setItem('isFirstAccess', 'NO');
+      } else {
+        console.log('재접속하는 유저입니다.');
+      }
+    });
 
     getFcmToken();
 
-    // Foreground에서 FCM 알림 수신
-    messaging().onMessage(async remoteMessage => {
-      console.log('Received in foreground:', remoteMessage);
-    });
+    // // Foreground에서 FCM 알림 수신
+    // messaging().onMessage(async remoteMessage => {
+    //   console.log('Received in foreground:', remoteMessage);
+    // });
   }, []);
 
-  // 안드로이드 13 이상일 경우 알림 권한 요청
-  const requestNotificationPermissionForAndroid = async () => {
+  /*
+  안드로이드 사용자 알림 권한 요청
+  */
+  const requestPushPermissionForAndroid = async () => {
     if (Number(Platform.Version) >= 33) {
-      // 안드로이드 13(API 수준 33) 이상인 경우
       const status = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
       );
@@ -39,56 +48,86 @@ const App = () => {
       if (status === PermissionsAndroid.RESULTS.GRANTED) {
         console.log('알림 권한 허용됨');
       } else {
-        // 권한 거부 시 설정으로 이동하는 모달 표시
         Alert.alert(
           '알림 권한 거부됨',
           '알림을 받기 위해서는 알림 권한이 필요합니다. 설정에서 알림 권한을 허용해주세요.',
           [
             {
               text: '설정으로 이동',
-              onPress: () => Linking.openSettings(), // 사용자를 앱의 설정 페이지로 이동
+              onPress: () => {
+                Linking.openSettings();
+              },
             },
-            {text: '나중에 하기', style: 'cancel'},
+            {
+              text: '다음에 하기',
+              style: 'cancel',
+            },
           ],
           {cancelable: false},
         );
       }
     } else {
-      // 안드로이드 13 미만 버전에서는 별도의 권한 요청 없이 진행
       console.log(
         '안드로이드 버전이 13 미만입니다. 별도의 알림 권한 요청이 필요하지 않습니다.',
       );
     }
   };
 
-  /**
-   * iOS 사용자에게 알림 권한을 요청합니다.
+  /*
+   iOS 사용자 알림 권한 요청
    */
-  const requestUserPermission = async () => {
+  const reRequestPushPermissionForiOS = async () => {
     const authStatus = await messaging().requestPermission();
     console.log('Authorization status:', authStatus);
 
-    // 알림 권한을 거부한 경우
     if (
       authStatus === messaging.AuthorizationStatus.DENIED ||
       authStatus === messaging.AuthorizationStatus.NOT_DETERMINED
     ) {
-      // iOS에서 알림 권한이 거부된 경우
-      if (Platform.OS === 'ios') {
-        Alert.alert(
-          '알림을 허용해주세요',
-          '설정 > 알림 > AU 으로 이동하여 알림을 허용해주세요.',
-          [
-            {
-              text: '설정으로 이동',
-              onPress: () => Linking.openURL('app-settings:'),
+      Alert.alert(
+        '알림을 허용해주세요',
+        '설정 > 알림 > AU 으로 이동하여 알림을 허용해주세요.',
+        [
+          {
+            text: '설정으로 이동',
+            onPress: () => {
+              Linking.openURL('app-settings:');
             },
-            {text: '취소', style: 'cancel'},
-          ],
-        );
-      }
+          },
+          {
+            text: '다음에 하기',
+            style: 'cancel',
+          },
+        ],
+      );
     }
   };
+  // /*
+  //  마케팅 수신 정보 표시 모달
+  //  */
+  // const showMarketingConsentModal = () => {
+  //   Alert.alert(
+  //     '마케팅 수신 동의',
+  //     '마케팅 및 프로모션 정보 수신에 동의하시겠습니까?',
+  //     [
+  //       {
+  //         text: '동의',
+  //         onPress: () => {
+  //           // 사용자가 동의한 경우, 동의 정보를 저장하는 로직을 실행
+  //           console.log('사용자가 마케팅 수신에 동의함');
+  //           // 예: AsyncStorage에 저장하거나 서버로 동의 정보 전송
+  //         },
+  //       },
+  //       {
+  //         text: '거절',
+  //         onPress: () => console.log('사용자가 마케팅 수신을 거절함'),
+  //         style: 'cancel',
+  //       },
+  //     ],
+  //     {cancelable: false},
+  //   );
+  // };
+
   /**
    * FCM 토큰을 받습니다.
    */
@@ -105,14 +144,14 @@ const App = () => {
     }
   };
 
-  // 커스텀 URL 스키마를 처리하는 함수
+  // 웹뷰 상에서 URL을 열기 위한 함수
   const handleShouldStartLoadWithRequest = (request: any) => {
     // 커스텀 URL 스키마가 감지되면 Linking을 사용하여 열기
     if (request.url.startsWith('https://pf.kakao.com/_tmxfFG/chat')) {
       Linking.openURL(request.url).catch(err => {
         console.error('Failed to open URL:', err);
       });
-      return false; // WebView에서는 이 URL을 로드하지 않습니다.
+      return false;
     }
 
     // HTTP와 HTTPS URL은 WebView에서 로드를 계속합니다.
@@ -121,12 +160,11 @@ const App = () => {
     );
   };
 
-  // 메시지 처리 함수 수정
+  // WebView에서 온 요청 바탕으로 카메라 권한 습득 처리 함수
   const onMessage = async (event: any) => {
     const message = JSON.parse(event.nativeEvent.data);
 
     if (message.type === 'REQUEST_PERMISSIONS') {
-      // PermissionUtil을 사용하여 권한 요청
       PermissionUtil.cmmReqCameraPermission().finally(() => {
         //카메라 권한 요청
         PermissionUtil.cmmReqPhotoLibraryPermission(); //사진첩 권한 요청
