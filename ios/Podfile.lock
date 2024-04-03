@@ -2061,6 +2061,8 @@ PODS:
     - FirebaseCoreExtension (= 10.23.0)
     - React-Core
     - RNFBApp
+  - RNPermissions (4.1.5):
+    - React-Core
   - SocketRocket (0.6.1)
   - Yoga (1.14.0)
 
@@ -2122,6 +2124,7 @@ DEPENDENCIES:
   - "RNCPushNotificationIOS (from `../node_modules/@react-native-community/push-notification-ios`)"
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
+  - RNPermissions (from `../node_modules/react-native-permissions`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -2256,6 +2259,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-firebase/app"
   RNFBMessaging:
     :path: "../node_modules/@react-native-firebase/messaging"
+  RNPermissions:
+    :path: "../node_modules/react-native-permissions"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2335,9 +2340,10 @@ SPEC CHECKSUMS:
   RNCPushNotificationIOS: 64218f3c776c03d7408284a819b2abfda1834bc8
   RNFBApp: 6d8509c5bb19b8788fee4f6a1f5d481aff20f15a
   RNFBMessaging: e1d20e5d9d3331c7120e3719ac3266ffd50d6df1
+  RNPermissions: 4da8c626e4ac9d71c1a199d500d52dd54da62e38
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 805bf71192903b20fc14babe48080582fee65a80
 
-PODFILE CHECKSUM: 9820b98ce0f9bd5617ee37d888636158fdce8a57
+PODFILE CHECKSUM: fc7cff2e4272090abe4c70c946fb6717711074ee
 
 COCOAPODS: 1.15.2

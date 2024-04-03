@@ -53,5 +53,10 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 
+	<key>NSCameraUsageDescription</key>
+	<string>카메라 권한을 이용할 수 있습니다. (필수권한)</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>사진 첨부 권한을 이용할 수 있습니다. (필수권한)</string>
+
 </dict>
 </plist>
