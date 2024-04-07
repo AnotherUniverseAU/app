@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -11,13 +11,23 @@ import {WebView} from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
 import PermissionUtil from './PermissionUtil.tsx';
+import PushNotification from 'react-native-push-notification';
 
 const App = () => {
+  // const basicUrl = 'http://10.0.2.2:3000/'; // 안드로이드 에뮬레이터
+  const basicUrl = 'http://127.0.0.1:3000/'; // ios 에뮬레이터
+  // const basicUrl = 'https://dhapdhap123.github.io'; // 테스트 배포 주소
+
+  const webViewRef = useRef<any>(null);
+
+  const [webViewUrl, setWebViewUrl] = useState(basicUrl); // 기본 URL 설정
+
   useEffect(() => {
     AsyncStorage.getItem('isFirstAccess').then(value => {
       if (value === null) {
         console.log('처음 접속하는 유저입니다');
         if (Platform.OS === 'android') {
+          createChannelForAndroid();
           requestPushPermissionForAndroid();
         } else {
           reRequestPushPermissionForiOS();
@@ -30,10 +40,44 @@ const App = () => {
 
     getFcmToken();
 
+    // 안드로이드 에서 FCM 알림을 받을 채널 생성
+    const createChannelForAndroid = async () =>
+      PushNotification.createChannel(
+        {
+          channelId: 'AU_channel', // 채널 ID
+          channelName: 'AU_Android', // 채널 이름
+          playSound: true, // 소리 여부
+          importance: 4, // 중요도
+          vibrate: true, // 진동 여부s
+        },
+        created => console.log(`CreateChannel returned '${created}'`), // 콜백 함수
+      );
+
     // // Foreground에서 FCM 알림 수신
     // messaging().onMessage(async remoteMessage => {
     //   console.log('Received in foreground:', remoteMessage);
     // });
+
+    // 백그라운드 상태에서 알림 클릭 시 해당 라우트로 이동
+    messaging().onNotificationOpenedApp((remoteMessage: any) => {
+      const route = remoteMessage.data.route;
+      console.log('route: ', basicUrl, route);
+      if (route) {
+        setWebViewUrl(`${basicUrl}${route}`); // URL 업데이트
+      }
+    });
+
+    // 앱 종료 이후 알림 클릭 시 해당 라우트로 이동
+    messaging()
+      .getInitialNotification()
+      .then((remoteMessage: any) => {
+        if (remoteMessage) {
+          const route = remoteMessage.data.route;
+          if (route) {
+            setWebViewUrl(`${basicUrl}${route}`); // URL 업데이트
+          }
+        }
+      });
   }, []);
 
   /*
@@ -49,18 +93,18 @@ const App = () => {
         console.log('알림 권한 허용됨');
       } else {
         Alert.alert(
-          '알림 권한 거부됨',
-          '알림을 받기 위해서는 알림 권한이 필요합니다. 설정에서 알림 권한을 허용해주세요.',
+          '캐릭터가 보내는 채팅을 놓칠 수 있어요',
+          '설정 > 앱 > AU > 알림 으로 이동하여 알림을 허용해주세요.',
           [
+            {
+              text: '다음에 하기',
+              style: 'cancel',
+            },
             {
               text: '설정으로 이동',
               onPress: () => {
                 Linking.openSettings();
               },
-            },
-            {
-              text: '다음에 하기',
-              style: 'cancel',
             },
           ],
           {cancelable: false},
@@ -85,7 +129,7 @@ const App = () => {
       authStatus === messaging.AuthorizationStatus.NOT_DETERMINED
     ) {
       Alert.alert(
-        '알림을 허용해주세요',
+        '캐릭터가 보내는 채팅을 놓칠 수 있어요🥲',
         '설정 > 알림 > AU 으로 이동하여 알림을 허용해주세요.',
         [
           {
@@ -136,6 +180,12 @@ const App = () => {
       const fcmToken = await messaging().getToken();
       if (fcmToken) {
         console.log('[+] FCM Token :: ', fcmToken);
+
+        // 웹뷰로 FCM 토큰 전달
+        webViewRef.current?.postMessage(
+          JSON.stringify({type: 'FCM_TOKEN', token: fcmToken}),
+        );
+        console.log('FCM Token 전달 완료되었습니다.');
       } else {
         console.log('FCM Token을 받지 못했습니다.');
       }
@@ -166,18 +216,26 @@ const App = () => {
 
     if (message.type === 'REQUEST_PERMISSIONS') {
       PermissionUtil.cmmReqCameraPermission().finally(() => {
-        //카메라 권한 요청
-        PermissionUtil.cmmReqPhotoLibraryPermission(); //사진첩 권한 요청
+        PermissionUtil.cmmReqPhotoLibraryPermission();
       });
+    } else if (message.type === 'OPEN_APP_SETTINGS') {
+      if (Platform.OS === 'android') {
+        Linking.openSettings().catch(err =>
+          console.error('Failed to open app settings:', err),
+        );
+      } else {
+        Linking.openURL('app-settings:').catch(err =>
+          console.error('Failed to open app settings:', err),
+        );
+      }
     }
   };
 
   return (
     <SafeAreaView style={styles.flexContainer}>
       <WebView
-        // source={{uri: 'http://10.0.2.2:3000/'}} // 안드로이드 에뮬레이터
-        source={{uri: 'http://127.0.0.1:3000/'}} // ios 에뮬레이터
-        // source={{uri: 'https://dhapdhap123.github.io/'}} // 테스트 배포 주소
+        ref={webViewRef}
+        source={{uri: webViewUrl}}
         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest} // iOS에서 사용
         shouldOverrideUrlLoading={handleShouldStartLoadWithRequest} // Android에서 사용
         onMessage={onMessage}
