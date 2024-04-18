@@ -4,5 +4,10 @@
 <dict>
 	<key>aps-environment</key>
 	<string>development</string>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>k32kq.app.link</string>
+		<string>k32kq-alternate.app.link</string>
+	</array>
 </dict>
 </plist>

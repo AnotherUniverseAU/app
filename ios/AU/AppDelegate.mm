@@ -3,6 +3,8 @@
 #import <Firebase.h>
 // Firebase Messaging 관련 import 추가
 #import <FirebaseMessaging/FirebaseMessaging.h>
+//Branch 관련 import 추가
+#import <RNBranch/RNBranch.h>
 
 // UNUserNotificationCenterDelegate 및 FIRMessagingDelegate 추가
 @interface AppDelegate () <UNUserNotificationCenterDelegate, FIRMessagingDelegate>
@@ -12,6 +14,8 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  // Branch 관련
+  [RNBranch initSessionWithLaunchOptions:launchOptions isReferrable:YES];
   // Firebase 구성
   [FIRApp configure];
   // Firebase 메시징 대리자 설정
@@ -36,6 +40,18 @@
   self.initialProps = @{};
 
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
+}
+
+// Branch 관련 추가
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+    [RNBranch application:app openURL:url options:options];
+  return YES;
+}
+
+// Branch 관련 추가
+- (BOOL)application:(UIApplication *)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
+   [RNBranch continueUserActivity:userActivity];
+  return YES;
 }
 
 // FCM 토큰 갱신을 위한 메소드
@@ -90,6 +106,7 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
     return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
 #endif
 }
+
 
 
 @end

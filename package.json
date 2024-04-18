@@ -17,6 +17,7 @@
     "i": "^0.3.7",
     "react": "^18.2.0",
     "react-native": "^0.73.6",
+    "react-native-branch": "^5.8.0",
     "react-native-permissions": "^4.1.5",
     "react-native-push-notification": "^8.1.1",
     "react-native-webview": "^13.8.2"
