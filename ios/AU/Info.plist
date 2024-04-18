@@ -2,6 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>branch_key</key>
+	<dict/>
+	<key>live</key>
+	<string>key_live_pwgJiUfeuxPsZJw2Y7YxOkbautfpxCid</string>
+	<key>branch_universal_link_domains</key>
+	<array>
+		<string>k32kq.app.link</string>
+		<string>k32kq-alternative.app.link</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -52,11 +61,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-
 	<key>NSCameraUsageDescription</key>
 	<string>카메라 권한을 이용할 수 있습니다. (필수권한)</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>사진 첨부 권한을 이용할 수 있습니다. (필수권한)</string>
-
 </dict>
 </plist>
