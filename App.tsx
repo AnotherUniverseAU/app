@@ -22,7 +22,8 @@ const App = () => {
   const webViewRef = useRef<any>(null);
 
   const [webViewUrl, setWebViewUrl] = useState(basicUrl); // 기본 URL 설정
-
+  const [localStorageScript, setLocalStorageScript] useState(''); // webview로 전달할 로컬스토리지 세팅 자바스크립트 코드
+  
   useEffect(() => {
     AsyncStorage.getItem('isFirstAccess').then(value => {
       if (value === null) {
@@ -35,6 +36,11 @@ const App = () => {
         }
         AsyncStorage.setItem('isFirstAccess', 'NO');
       } else {
+         AsyncStorage.getItem('refreshToken').then(token => {
+           if (token){
+             setLocalStorageScript(`window.localStorage.setItem('refreshToken', '${token}');`)
+           }
+         })
         console.log('재접속하는 유저입니다.');
       }
     });
@@ -229,6 +235,8 @@ const App = () => {
           console.error('Failed to open app settings:', err),
         );
       }
+    } else if (message.type === 'STORE_REFRESH_TOKEN'){
+      AsyncStorage.setItem('refreshToken', message.token)
     }
   };
 
@@ -239,6 +247,7 @@ const App = () => {
         source={{uri: webViewUrl}}
         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest} // iOS에서 사용
         shouldOverrideUrlLoading={handleShouldStartLoadWithRequest} // Android에서 사용
+        injectedJavaScript={localStorageScript} // refreshToken WebView로 전달
         onMessage={onMessage}
       />
     </SafeAreaView>
