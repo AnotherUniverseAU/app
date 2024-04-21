@@ -17,13 +17,27 @@ const App = () => {
   // const basicUrl = 'http://10.0.2.2:3000/'; // 안드로이드 에뮬레이터
   // const basicUrl = 'http://127.0.0.1:3000/'; // ios 에뮬레이터
   // const basicUrl = 'https://dhapdhap123.github.io'; // 테스트 배포 주소
-  const basicUrl = 'https://proud-flower-00c9cde10.5.azurestaticapps.net/'; //실제 배포 주소
+  const basicUrl = 'https://kind-pebble-0020f5710.5.azurestaticapps.net/login'; //실제 배포 주소
 
   const webViewRef = useRef<any>(null);
 
   const [webViewUrl, setWebViewUrl] = useState(basicUrl); // 기본 URL 설정
-  const [localStorageScript, setLocalStorageScript] useState(''); // webview로 전달할 로컬스토리지 세팅 자바스크립트 코드
-  
+
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
+
+  const [localStorageScript, setLocalStorageScript] = useState(''); // webview로 전달할 로컬스토리지 세팅 자바스크립트 코드
+
+  useEffect(() => {
+    if (fcmToken) {
+      const interval = setInterval(() => {
+        console.log('Sending FCM Token:', fcmToken); // 이 로그는 최신 토큰을 보여주지 않을 수 있습니다.
+        sendTokenToWebView(); // 이 함수 내에서 참조하는 fcmToken이 최신 상태인지 확인이 필요합니다.
+      }, 3000);
+
+      return () => clearInterval(interval);
+    }
+  }, [fcmToken]); // fcmToken이 변경될 때마다 인터벌 재설정
+
   useEffect(() => {
     AsyncStorage.getItem('isFirstAccess').then(value => {
       if (value === null) {
@@ -36,29 +50,20 @@ const App = () => {
         }
         AsyncStorage.setItem('isFirstAccess', 'NO');
       } else {
-         AsyncStorage.getItem('refreshToken').then(token => {
-           if (token){
-             setLocalStorageScript(`window.localStorage.setItem('refreshToken', '${token}');`)
-           }
-         })
+        AsyncStorage.getItem('refreshToken').then(token => {
+          if (token) {
+            setLocalStorageScript(
+              `window.localStorage.setItem('refreshToken', '${token}');`,
+            );
+          }
+        });
         console.log('재접속하는 유저입니다.');
       }
     });
 
-    getFcmToken();
+    checkAuthStatus();
 
-    // 안드로이드 에서 FCM 알림을 받을 채널 생성
-    const createChannelForAndroid = async () =>
-      PushNotification.createChannel(
-        {
-          channelId: 'AU_channel', // 채널 ID
-          channelName: 'AU_Android', // 채널 이름
-          playSound: true, // 소리 여부
-          importance: 4, // 중요도
-          vibrate: true, // 진동 여부s
-        },
-        created => console.log(`CreateChannel returned '${created}'`), // 콜백 함수
-      );
+    getFcmToken();
 
     // // Foreground에서 FCM 알림 수신
     // messaging().onMessage(async remoteMessage => {
@@ -85,7 +90,27 @@ const App = () => {
           }
         }
       });
+
+    // 컴포넌트 언마운트 시 인터벌 정리
   }, []);
+
+  const checkAuthStatus = async () => {
+    const authStatus = await messaging().requestPermission();
+    console.log('Authorization status out RequestFunction:', authStatus);
+  };
+
+  // 안드로이드 에서 FCM 알림을 받을 채널 생성
+  const createChannelForAndroid = async () =>
+    PushNotification.createChannel(
+      {
+        channelId: 'AU_channel', // 채널 ID
+        channelName: 'AU_Android', // 채널 이름
+        playSound: true, // 소리 여부
+        importance: 4, // 중요도
+        vibrate: true, // 진동 여부s
+      },
+      created => console.log(`CreateChannel returned '${created}'`), // 콜백 함수
+    );
 
   /*
   안드로이드 사용자 알림 권한 요청
@@ -128,31 +153,40 @@ const App = () => {
    iOS 사용자 알림 권한 요청
    */
   const reRequestPushPermissionForiOS = async () => {
-    const authStatus = await messaging().requestPermission();
-    console.log('Authorization status:', authStatus);
+    // 1초 대기를 위한 Promise 구현
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
-    if (
-      authStatus === messaging.AuthorizationStatus.DENIED ||
-      authStatus === messaging.AuthorizationStatus.NOT_DETERMINED
-    ) {
-      Alert.alert(
-        '캐릭터가 보내는 채팅을 놓칠 수 있어요🥲',
-        '설정 > 알림 > AU 으로 이동하여 알림을 허용해주세요.',
-        [
-          {
-            text: '설정으로 이동',
-            onPress: () => {
-              Linking.openURL('app-settings:');
+    try {
+      const authStatus = await messaging().requestPermission();
+      console.log('Authorization status:', authStatus);
+
+      if (
+        authStatus === messaging.AuthorizationStatus.DENIED ||
+        authStatus === messaging.AuthorizationStatus.NOT_DETERMINED
+      ) {
+        Alert.alert(
+          '캐릭터가 보내는 채팅을 놓칠 수 있어요🥲',
+          '설정 > 알림 > AU 으로 이동하여 알림을 허용해주세요.',
+          [
+            {
+              text: '설정으로 이동',
+              onPress: () => {
+                Linking.openURL('app-settings:');
+              },
             },
-          },
-          {
-            text: '다음에 하기',
-            style: 'cancel',
-          },
-        ],
-      );
+            {
+              text: '다음에 하기',
+              style: 'cancel',
+            },
+          ],
+          {cancelable: false},
+        );
+      }
+    } catch (error) {
+      console.error('Error requesting permission:', error);
     }
   };
+
   // /*
   //  마케팅 수신 정보 표시 모달
   //  */
@@ -179,25 +213,49 @@ const App = () => {
   //   );
   // };
 
-  /**
-   * FCM 토큰을 받습니다.
-   */
+  // /**
+  //  * FCM 토큰을 받습니다.
+  //  */
+  // const getFcmToken = async () => {
+  //   try {
+  //     const fcmToken = await messaging().getToken();
+  //     if (fcmToken) {
+  //       console.log('[+] FCM Token :: ', fcmToken);
+
+  //       // 웹뷰로 FCM 토큰 전달
+  //       webViewRef.current?.postMessage(
+  //         JSON.stringify({type: 'FCM_TOKEN', token: fcmToken}),
+  //       );
+  //       console.log('FCM Token 전달 완료되었습니다.');
+  //     } else {
+  //       console.log('FCM Token을 받지 못했습니다.');
+  //     }
+  //   } catch (error) {
+  //     console.log('FCM 토큰을 받는 데 실패했습니다.', error);
+  //   }
+  // };
+
   const getFcmToken = async () => {
     try {
-      const fcmToken = await messaging().getToken();
-      if (fcmToken) {
-        console.log('[+] FCM Token :: ', fcmToken);
-
-        // 웹뷰로 FCM 토큰 전달
-        webViewRef.current?.postMessage(
-          JSON.stringify({type: 'FCM_TOKEN', token: fcmToken}),
-        );
-        console.log('FCM Token 전달 완료되었습니다.');
+      const token = await messaging().getToken();
+      if (token) {
+        console.log('[+] FCM Token :: ', token);
+        setFcmToken(token); // 토큰 상태 업데이트
       } else {
         console.log('FCM Token을 받지 못했습니다.');
       }
     } catch (error) {
       console.log('FCM 토큰을 받는 데 실패했습니다.', error);
+    }
+  };
+
+  const sendTokenToWebView = () => {
+    // 웹뷰가 로드된 후에 토큰을 전달
+    if (webViewRef.current) {
+      webViewRef.current.postMessage(
+        JSON.stringify({type: 'FCM_TOKEN', token: fcmToken}),
+      );
+      console.log('FCM Token 전달 완료되었습니다.');
     }
   };
 
@@ -235,8 +293,8 @@ const App = () => {
           console.error('Failed to open app settings:', err),
         );
       }
-    } else if (message.type === 'STORE_REFRESH_TOKEN'){
-      AsyncStorage.setItem('refreshToken', message.token)
+    } else if (message.type === 'STORE_REFRESH_TOKEN') {
+      AsyncStorage.setItem('refreshToken', message.token);
     }
   };
 
@@ -247,8 +305,9 @@ const App = () => {
         source={{uri: webViewUrl}}
         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest} // iOS에서 사용
         shouldOverrideUrlLoading={handleShouldStartLoadWithRequest} // Android에서 사용
-        injectedJavaScript={localStorageScript} // refreshToken WebView로 전달
         onMessage={onMessage}
+        onLoad={sendTokenToWebView}
+        injectedJavaScript={localStorageScript} // refreshToken WebView로 전달
       />
     </SafeAreaView>
   );
