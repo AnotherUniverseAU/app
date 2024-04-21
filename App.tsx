@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef} from 'react';
 import {
-  SafeAreaView,
+  View,
   StyleSheet,
   Linking,
   Alert,
@@ -299,7 +299,7 @@ const App = () => {
   };
 
   return (
-    <SafeAreaView style={styles.flexContainer}>
+    <View style={styles.flexContainer}>
       <WebView
         ref={webViewRef}
         source={{uri: webViewUrl}}
@@ -309,7 +309,7 @@ const App = () => {
         onLoad={sendTokenToWebView}
         injectedJavaScript={localStorageScript} // refreshToken WebView로 전달
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
