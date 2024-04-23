@@ -1,4 +1,4 @@
-package com.au
+package com.auandroid
 
 import android.content.Intent
 import com.facebook.react.ReactActivity

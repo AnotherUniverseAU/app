@@ -25,19 +25,6 @@ const App = () => {
 
   const [fcmToken, setFcmToken] = useState<string | null>(null);
 
-  const [localStorageScript, setLocalStorageScript] = useState(''); // webview로 전달할 로컬스토리지 세팅 자바스크립트 코드
-
-  useEffect(() => {
-    if (fcmToken) {
-      const interval = setInterval(() => {
-        console.log('Sending FCM Token:', fcmToken); // 이 로그는 최신 토큰을 보여주지 않을 수 있습니다.
-        sendTokenToWebView(); // 이 함수 내에서 참조하는 fcmToken이 최신 상태인지 확인이 필요합니다.
-      }, 3000);
-
-      return () => clearInterval(interval);
-    }
-  }, [fcmToken]); // fcmToken이 변경될 때마다 인터벌 재설정
-
   useEffect(() => {
     AsyncStorage.getItem('isFirstAccess').then(value => {
       if (value === null) {
@@ -50,20 +37,14 @@ const App = () => {
         }
         AsyncStorage.setItem('isFirstAccess', 'NO');
       } else {
-        AsyncStorage.getItem('refreshToken').then(token => {
-          if (token) {
-            setLocalStorageScript(
-              `window.localStorage.setItem('refreshToken', '${token}');`,
-            );
-          }
-        });
+        AsyncStorage.getItem('refreshToken').then(token => {});
         console.log('재접속하는 유저입니다.');
       }
     });
 
-    checkAuthStatus();
+    // checkAuthStatus();
 
-    getFcmToken();
+    // getFcmToken();
 
     // // Foreground에서 FCM 알림 수신
     // messaging().onMessage(async remoteMessage => {
@@ -90,14 +71,26 @@ const App = () => {
           }
         }
       });
-
     // 컴포넌트 언마운트 시 인터벌 정리
   }, []);
 
-  const checkAuthStatus = async () => {
-    const authStatus = await messaging().requestPermission();
-    console.log('Authorization status out RequestFunction:', authStatus);
-  };
+  useEffect(() => {
+    // 두 번째 useEffect에서는 FCM 토큰이 설정된 후 인터벌을 설정합니다.
+    if (fcmToken) {
+      const interval = setInterval(() => {
+        console.log('Sending FCM Token:', fcmToken);
+        sendTokenToWebView();
+      }, 4000);
+
+      // 컴포넌트 언마운트 시 인터벌 정리
+      return () => clearInterval(interval);
+    }
+  }, [fcmToken]);
+
+  // const checkAuthStatus = async () => {
+  //   const authStatus = await messaging().requestPermission();
+  //   console.log('Authorization status out RequestFunction:', authStatus);
+  // };
 
   // 안드로이드 에서 FCM 알림을 받을 채널 생성
   const createChannelForAndroid = async () =>
@@ -120,7 +113,7 @@ const App = () => {
       const status = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
       );
-
+      await getFcmToken();
       if (status === PermissionsAndroid.RESULTS.GRANTED) {
         console.log('알림 권한 허용됨');
       } else {
@@ -159,7 +152,7 @@ const App = () => {
     try {
       const authStatus = await messaging().requestPermission();
       console.log('Authorization status:', authStatus);
-
+      await getFcmToken();
       if (
         authStatus === messaging.AuthorizationStatus.DENIED ||
         authStatus === messaging.AuthorizationStatus.NOT_DETERMINED
@@ -238,14 +231,17 @@ const App = () => {
   const getFcmToken = async () => {
     try {
       const token = await messaging().getToken();
+      new Promise(resolve => setTimeout(resolve, 2000));
       if (token) {
         console.log('[+] FCM Token :: ', token);
-        setFcmToken(token); // 토큰 상태 업데이트
+        await setFcmToken(token); // 토큰 상태 업데이트
       } else {
         console.log('FCM Token을 받지 못했습니다.');
       }
+      Alert.alert('FCM Token', token);
     } catch (error) {
       console.log('FCM 토큰을 받는 데 실패했습니다.', error);
+      Alert.alert('FCM Token', '토큰을 받아오는 데 실패했습니다.');
     }
   };
 
@@ -306,8 +302,6 @@ const App = () => {
         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest} // iOS에서 사용
         shouldOverrideUrlLoading={handleShouldStartLoadWithRequest} // Android에서 사용
         onMessage={onMessage}
-        onLoad={sendTokenToWebView}
-        injectedJavaScript={localStorageScript} // refreshToken WebView로 전달
       />
     </View>
   );

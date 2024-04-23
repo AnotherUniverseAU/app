@@ -1,4 +1,4 @@
-package com.au
+package com.auandroid
 
 import android.app.Application
 import com.facebook.react.PackageList
