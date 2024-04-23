@@ -8,3 +8,10 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+-keep class com.huawei.hms.** { *; }
+-keep interface com.huawei.hms.** { *; }
+-keep class com.huawei.hms.ads.installreferrer.** { *; }
+
+-keep class com.example.MyClass { *; }
+-keep class com.example.MyClass$* { *; }
+-keep interface com.example.MyInterface { *; }
