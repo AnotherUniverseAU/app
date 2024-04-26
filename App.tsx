@@ -25,6 +25,8 @@ const App = () => {
 
   const [fcmToken, setFcmToken] = useState<string | null>(null);
 
+  const [sendFCMToken, setSendFCMToken] = useState<boolean>(false);
+
   useEffect(() => {
     AsyncStorage.getItem('isFirstAccess').then(value => {
       if (value === null) {
@@ -41,10 +43,6 @@ const App = () => {
         console.log('재접속하는 유저입니다.');
       }
     });
-
-    // checkAuthStatus();
-
-    // getFcmToken();
 
     // // Foreground에서 FCM 알림 수신
     // messaging().onMessage(async remoteMessage => {
@@ -73,19 +71,6 @@ const App = () => {
       });
     // 컴포넌트 언마운트 시 인터벌 정리
   }, []);
-
-  useEffect(() => {
-    // 두 번째 useEffect에서는 FCM 토큰이 설정된 후 인터벌을 설정합니다.
-    if (fcmToken) {
-      const interval = setInterval(() => {
-        console.log('Sending FCM Token:', fcmToken);
-        sendTokenToWebView();
-      }, 4000);
-
-      // 컴포넌트 언마운트 시 인터벌 정리
-      return () => clearInterval(interval);
-    }
-  }, [fcmToken]);
 
   // const checkAuthStatus = async () => {
   //   const authStatus = await messaging().requestPermission();
@@ -206,28 +191,6 @@ const App = () => {
   //   );
   // };
 
-  // /**
-  //  * FCM 토큰을 받습니다.
-  //  */
-  // const getFcmToken = async () => {
-  //   try {
-  //     const fcmToken = await messaging().getToken();
-  //     if (fcmToken) {
-  //       console.log('[+] FCM Token :: ', fcmToken);
-
-  //       // 웹뷰로 FCM 토큰 전달
-  //       webViewRef.current?.postMessage(
-  //         JSON.stringify({type: 'FCM_TOKEN', token: fcmToken}),
-  //       );
-  //       console.log('FCM Token 전달 완료되었습니다.');
-  //     } else {
-  //       console.log('FCM Token을 받지 못했습니다.');
-  //     }
-  //   } catch (error) {
-  //     console.log('FCM 토큰을 받는 데 실패했습니다.', error);
-  //   }
-  // };
-
   const getFcmToken = async () => {
     try {
       const token = await messaging().getToken();
@@ -245,14 +208,12 @@ const App = () => {
     }
   };
 
-  const sendTokenToWebView = () => {
+  const sendFCMTokenToWebView = () => {
     // 웹뷰가 로드된 후에 토큰을 전달
-    if (webViewRef.current) {
-      webViewRef.current.postMessage(
-        JSON.stringify({type: 'FCM_TOKEN', token: fcmToken}),
-      );
-      console.log('FCM Token 전달 완료되었습니다.');
-    }
+    webViewRef.current.postMessage(
+      JSON.stringify({type: 'FCM_TOKEN_RECEIVE', token: fcmToken}),
+    );
+    console.log('FCM Token 전달 완료되었습니다.');
   };
 
   // 웹뷰 상에서 URL을 열기 위한 함수
@@ -264,7 +225,6 @@ const App = () => {
       });
       return false;
     }
-
     // HTTP와 HTTPS URL은 WebView에서 로드를 계속합니다.
     return (
       request.url.startsWith('http://') || request.url.startsWith('https://')
@@ -289,10 +249,17 @@ const App = () => {
           console.error('Failed to open app settings:', err),
         );
       }
-    } else if (message.type === 'STORE_REFRESH_TOKEN') {
-      AsyncStorage.setItem('refreshToken', message.token);
+    } else if (message.type === 'FCM_TOKEN_REQUESTS') {
+      setSendFCMToken(true);
     }
   };
+
+  useEffect(() => {
+    if (fcmToken) {
+      console.log('Sending FCM Token:', fcmToken);
+      sendFCMTokenToWebView();
+    }
+  }, [sendFCMToken]);
 
   return (
     <View style={styles.flexContainer}>
