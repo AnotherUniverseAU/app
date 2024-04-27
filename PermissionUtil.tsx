@@ -34,7 +34,8 @@ class PermissionUtil {
     ]);
 
     const cameraGranted = cameraResult === RESULTS.GRANTED;
-    const libraryGranted = libraryResult === RESULTS.GRANTED;
+    const libraryGranted =
+      libraryResult === RESULTS.GRANTED || libraryResult === RESULTS.LIMITED;
 
     // 결과를 웹뷰로 전송
     if (this.webViewRef) {
@@ -78,6 +79,8 @@ class PermissionUtil {
 
     if (result === RESULTS.GRANTED) {
       console.log('사진 첨부 권한이 허용되었습니다.');
+    } else if (result === RESULTS.LIMITED) {
+      console.log('사진 첨부 권한이 제한되었습니다.');
     } else if (result === RESULTS.BLOCKED || result === RESULTS.DENIED) {
       console.log('사진 첨부 권한이 거부되었습니다.');
       this.showSettingsAlert('사진 첨부');
