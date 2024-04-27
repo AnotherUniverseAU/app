@@ -15,8 +15,8 @@ import PushNotification from 'react-native-push-notification';
 
 const App = () => {
   // const basicUrl = 'http://10.0.2.2:3000/'; // 안드로이드 에뮬레이터
-  // const basicUrl = 'http://127.0.0.1:3000/'; // ios 에뮬레이터
-  // const basicUrl = 'https://dhapdhap123.github.io'; // 테스트 배포 주소
+  // const basicUrl = 'http://127.0.0.1:3000/chatroom/6627927e60cd66ee2df868f6'; // ios 에뮬레이터
+  // const basicUrl = 'http://127.0.0.1:3000/nickname'; // ios 에뮬레이터
   const basicUrl = 'https://kind-pebble-0020f5710.5.azurestaticapps.net'; //실제 배포 주소
 
   const webViewRef = useRef<any>(null);
@@ -26,6 +26,16 @@ const App = () => {
   const [fcmToken, setFcmToken] = useState<string | null>(null);
 
   const [sendFCMToken, setSendFCMToken] = useState<boolean>(false);
+  useEffect(() => {
+    getFcmToken(); // 앱이 시작할 때마다 FCM 토큰을 받아오도록 설정
+  }, []);
+
+  //component에서 webview 직접 활용하기 위해 필요
+  useEffect(() => {
+    if (webViewRef.current) {
+      PermissionUtil.setWebViewRef(webViewRef.current);
+    }
+  }, [webViewRef.current]);
 
   useEffect(() => {
     AsyncStorage.getItem('isFirstAccess').then(value => {
@@ -98,7 +108,7 @@ const App = () => {
       const status = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
       );
-      await getFcmToken();
+      // await getFcmToken();
       if (status === PermissionsAndroid.RESULTS.GRANTED) {
         console.log('알림 권한 허용됨');
       } else {
@@ -137,11 +147,8 @@ const App = () => {
     try {
       const authStatus = await messaging().requestPermission();
       console.log('Authorization status:', authStatus);
-      await getFcmToken();
-      if (
-        authStatus === messaging.AuthorizationStatus.DENIED ||
-        authStatus === messaging.AuthorizationStatus.NOT_DETERMINED
-      ) {
+      // await getFcmToken();
+      if (authStatus === messaging.AuthorizationStatus.DENIED) {
         Alert.alert(
           '캐릭터가 보내는 채팅을 놓칠 수 있어요🥲',
           '설정 > 알림 > AU 으로 이동하여 알림을 허용해주세요.',
@@ -201,19 +208,9 @@ const App = () => {
       } else {
         console.log('FCM Token을 받지 못했습니다.');
       }
-      Alert.alert('FCM Token', token);
     } catch (error) {
       console.log('FCM 토큰을 받는 데 실패했습니다.', error);
-      Alert.alert('FCM Token', '토큰을 받아오는 데 실패했습니다.');
     }
-  };
-
-  const sendFCMTokenToWebView = () => {
-    // 웹뷰가 로드된 후에 토큰을 전달
-    webViewRef.current.postMessage(
-      JSON.stringify({type: 'FCM_TOKEN_RECEIVE', token: fcmToken}),
-    );
-    console.log('FCM Token 전달 완료되었습니다.');
   };
 
   // 웹뷰 상에서 URL을 열기 위한 함수
@@ -251,13 +248,16 @@ const App = () => {
       }
     } else if (message.type === 'FCM_TOKEN_REQUESTS') {
       setSendFCMToken(true);
+    } else if (message.type == 'REQUEST_PERMISSIONS_CHECK') {
+      PermissionUtil.cmmCheckAndSendPermissions();
     }
   };
 
   useEffect(() => {
     if (fcmToken) {
-      console.log('Sending FCM Token:', fcmToken);
-      sendFCMTokenToWebView();
+      webViewRef.current.postMessage(
+        JSON.stringify({type: 'FCM_TOKEN_RECEIVE', token: fcmToken}),
+      );
     }
   }, [sendFCMToken]);
 

@@ -1,4 +1,5 @@
 import {Alert, Platform} from 'react-native';
+import {useRef} from 'react';
 import {
   PERMISSIONS,
   RESULTS,
@@ -7,8 +8,45 @@ import {
 } from 'react-native-permissions';
 
 class PermissionUtil {
+  webViewRef = null;
+  setWebViewRef = (ref: any) => {
+    this.webViewRef = ref;
+  };
   cmmDevicePlatformCheck = (): boolean => {
     return Platform.OS === 'ios' || Platform.OS === 'android';
+  };
+
+  cmmCheckAndSendPermissions = async (): Promise<void> => {
+    if (!this.cmmDevicePlatformCheck()) return;
+
+    const cameraPermission =
+      Platform.OS === 'ios'
+        ? PERMISSIONS.IOS.CAMERA
+        : PERMISSIONS.ANDROID.CAMERA;
+    const libraryPermission =
+      Platform.OS === 'ios'
+        ? PERMISSIONS.IOS.PHOTO_LIBRARY
+        : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
+
+    const [cameraResult, libraryResult] = await Promise.all([
+      request(cameraPermission),
+      request(libraryPermission),
+    ]);
+
+    const cameraGranted = cameraResult === RESULTS.GRANTED;
+    const libraryGranted = libraryResult === RESULTS.GRANTED;
+
+    // 결과를 웹뷰로 전송
+    if (this.webViewRef) {
+      (this.webViewRef as any).postMessage(
+        JSON.stringify({
+          cameraPermission: cameraGranted,
+          libraryPermission: libraryGranted,
+        }),
+      );
+    } else {
+      console.log('WebViewRef 사용 불가능');
+    }
   };
 
   cmmReqCameraPermission = async (): Promise<void> => {
@@ -41,6 +79,7 @@ class PermissionUtil {
     if (result === RESULTS.GRANTED) {
       console.log('사진 첨부 권한이 허용되었습니다.');
     } else if (result === RESULTS.BLOCKED || result === RESULTS.DENIED) {
+      console.log('사진 첨부 권한이 거부되었습니다.');
       this.showSettingsAlert('사진 첨부');
     }
   };
