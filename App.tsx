@@ -6,6 +6,7 @@ import {
   Alert,
   Platform,
   PermissionsAndroid,
+  SafeAreaView,
 } from 'react-native';
 import {WebView} from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,16 +17,16 @@ import PushNotification from 'react-native-push-notification';
 const App = () => {
   // const basicUrl = 'http://10.0.2.2:3000/'; // 안드로이드 에뮬레이터
   // const basicUrl = 'http://127.0.0.1:3000/chatroom/6627927e60cd66ee2df868f6'; // ios 에뮬레이터
-  // const basicUrl = 'http://127.0.0.1:3000/nickname'; // ios 에뮬레이터
+  // const basicUrl = 'http://127.0.0.1:3000/create/'; // ios 에뮬레이터
   const basicUrl = 'https://kind-pebble-0020f5710.5.azurestaticapps.net'; //실제 배포 주소
 
   const webViewRef = useRef<any>(null);
 
   const [webViewUrl, setWebViewUrl] = useState(basicUrl); // 기본 URL 설정
-
   const [fcmToken, setFcmToken] = useState<string | null>(null);
-
   const [sendFCMToken, setSendFCMToken] = useState<boolean>(false);
+  const [safeArea, setSafeArea] = useState<boolean>(false);
+
   useEffect(() => {
     getFcmToken(); // 앱이 시작할 때마다 FCM 토큰을 받아오도록 설정
   }, []);
@@ -49,7 +50,6 @@ const App = () => {
         }
         AsyncStorage.setItem('isFirstAccess', 'NO');
       } else {
-        AsyncStorage.getItem('refreshToken').then(token => {});
         console.log('재접속하는 유저입니다.');
       }
     });
@@ -142,7 +142,7 @@ const App = () => {
    */
   const reRequestPushPermissionForiOS = async () => {
     // 1초 대기를 위한 Promise 구현
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // await new Promise(resolve => setTimeout(resolve, 3000));
 
     try {
       const authStatus = await messaging().requestPermission();
@@ -200,11 +200,14 @@ const App = () => {
 
   const getFcmToken = async () => {
     try {
+      console.log('[+] FCM 토큰을 받는 중...');
+      new Promise(resolve => setTimeout(resolve, 5000));
       const token = await messaging().getToken();
-      new Promise(resolve => setTimeout(resolve, 2000));
+      new Promise(resolve => setTimeout(resolve, 5000));
+      console.log('token:', token);
       if (token) {
         console.log('[+] FCM Token :: ', token);
-        await setFcmToken(token); // 토큰 상태 업데이트
+        setFcmToken(token); // 토큰 상태 업데이트
       } else {
         console.log('FCM Token을 받지 못했습니다.');
       }
@@ -248,8 +251,11 @@ const App = () => {
       }
     } else if (message.type === 'FCM_TOKEN_REQUESTS') {
       setSendFCMToken(true);
+      setSafeArea(false);
     } else if (message.type == 'REQUEST_PERMISSIONS_CHECK') {
       PermissionUtil.cmmCheckAndSendPermissions();
+    } else if (message.type == 'ADD_SAFETY_AREA') {
+      setSafeArea(true);
     }
   };
 
@@ -261,7 +267,24 @@ const App = () => {
     }
   }, [sendFCMToken]);
 
-  return (
+  const styles = StyleSheet.create({
+    flexContainer: {
+      flex: 1,
+      backgroundColor: '#ffffff',
+    },
+  });
+
+  return safeArea ? (
+    <SafeAreaView style={styles.flexContainer}>
+      <WebView
+        ref={webViewRef}
+        source={{uri: webViewUrl}}
+        onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest} // iOS에서 사용
+        shouldOverrideUrlLoading={handleShouldStartLoadWithRequest} // Android에서 사용
+        onMessage={onMessage}
+      />
+    </SafeAreaView>
+  ) : (
     <View style={styles.flexContainer}>
       <WebView
         ref={webViewRef}
@@ -273,12 +296,5 @@ const App = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  flexContainer: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-});
 
 export default App;

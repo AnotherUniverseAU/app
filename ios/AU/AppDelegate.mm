@@ -42,6 +42,15 @@
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+  [FIRMessaging messaging].APNSToken = deviceToken;
+  NSLog(@"APNS Token is set: %@", deviceToken);
+}
+
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
+  NSLog(@"Failed to register for remote notifications: %@", error);
+}
+
 // Branch 관련 추가
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
     [RNBranch application:app openURL:url options:options];
