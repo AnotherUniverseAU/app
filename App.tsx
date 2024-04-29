@@ -13,19 +13,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
 import PermissionUtil from './PermissionUtil.tsx';
 import PushNotification from 'react-native-push-notification';
+import axios from 'axios';
 
 const App = () => {
   // const basicUrl = 'http://10.0.2.2:3000/'; // 안드로이드 에뮬레이터
   // const basicUrl = 'http://127.0.0.1:3000/chatroom/6627927e60cd66ee2df868f6'; // ios 에뮬레이터
   // const basicUrl = 'http://127.0.0.1:3000/create'; // ios 에뮬레이터
   const basicUrl = 'https://kind-pebble-0020f5710.5.azurestaticapps.net'; //실제 배포 주소
+  const BASE_URL =
+    'https://anotheruniverse-backend.delightfuldune-c082bcd0.koreacentral.azurecontainerapps.io';
 
   const webViewRef = useRef<any>(null);
 
   const [webViewUrl, setWebViewUrl] = useState(basicUrl); // 기본 URL 설정
   const [fcmToken, setFcmToken] = useState<string | null>(null);
-  const [sendFCMToken, setSendFCMToken] = useState<boolean>(false);
   const [safeArea, setSafeArea] = useState<boolean>(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [hasAccessTokenUpdate, setHasAccessTokenUpdate] =
+    useState<boolean>(false);
 
   // useEffect(() => {
   //   const checkPermissionsAndFetchToken = async () => {
@@ -233,10 +238,10 @@ const App = () => {
       const token = await messaging().getToken();
       new Promise(resolve => setTimeout(resolve, 2000));
       AsyncStorage.setItem('fcmToken', token);
-      Alert.alert('[+] FCM Token outside(app):: ', token);
+      // Alert.alert('[+] FCM Token outside(app):: ', token);
       if (token) {
-        console.log('[+] FCM Token :: ', token);
-        Alert.alert('[+] FCM Token (app) :: ', token);
+        // console.log('[+] FCM Token :: ', token);
+        // Alert.alert('[+] FCM Token (app) :: ', token);
         setFcmToken(token); // 토큰 상태 업데이트
       } else {
         console.log('FCM 토큰이 존재하지 않습니다.');
@@ -281,19 +286,49 @@ const App = () => {
           console.error('Failed to open app settings:', err),
         );
       }
-    } else if (message.type === 'FCM_TOKEN_REQUESTS') {
-      setSendFCMToken(true);
+    } else if (message.type === 'REMOVE_SAFETY_AREA') {
       setSafeArea(false);
     } else if (message.type == 'ADD_SAFETY_AREA') {
       setSafeArea(true);
+    } else if (message.type == 'ACCESS_TOKEN') {
+      setAccessToken(message.ACCESS_TOKEN);
+      // Alert.alert('Access Token', message.ACCESS_TOKEN);
+      // console.log('Access Token:', message.ACCESS_TOKEN);
     }
   };
 
   useEffect(() => {
-    webViewRef.current.postMessage(
-      JSON.stringify({type: 'FCM_TOKEN_RECEIVE', token: fcmToken}),
-    );
-  }, [sendFCMToken]);
+    // Alert.alert('FCM Token', fcmToken as any);
+    // Alert.alert('Access Token', accessToken as any);
+    if (accessToken && !hasAccessTokenUpdate) {
+      axios
+        .post(
+          `${BASE_URL}/user/fcm-token`,
+          {fcmToken: fcmToken},
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        )
+        .then(response => {
+          console.log('Token registration successful', response);
+          // Alert.alert('Token registration successful', response.data);
+        })
+        .catch(error => {
+          console.error('Token registration failed', error);
+          // Alert.alert('Token registration failed', error.response);
+        });
+
+      setHasAccessTokenUpdate(true);
+    }
+  }, [accessToken]);
+
+  // useEffect(() => {
+  //   webViewRef.current.postMessage(
+  //     JSON.stringify({type: 'FCM_TOKEN_RECEIVE', token: fcmToken}),
+  //   );
+  // }, [sendFCMToken]);
 
   const styles = StyleSheet.create({
     flexContainer: {
