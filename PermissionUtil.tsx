@@ -48,44 +48,51 @@ class PermissionUtil {
     } else {
       console.log('WebViewRef 사용 불가능');
     }
-  };
 
-  cmmReqCameraPermission = async (): Promise<void> => {
-    if (!this.cmmDevicePlatformCheck()) return;
-
-    const platformPermissions =
-      Platform.OS === 'ios'
-        ? PERMISSIONS.IOS.CAMERA
-        : PERMISSIONS.ANDROID.CAMERA;
-
-    const result = await request(platformPermissions);
-
-    if (result === RESULTS.GRANTED) {
-      console.log('카메라 권한이 허용되었습니다.');
-    } else if (result === RESULTS.BLOCKED || result === RESULTS.DENIED) {
+    if (!cameraGranted) {
       this.showSettingsAlert('카메라');
     }
-  };
-
-  cmmReqPhotoLibraryPermission = async (): Promise<void> => {
-    if (!this.cmmDevicePlatformCheck()) return;
-
-    const platformPermissions =
-      Platform.OS === 'ios'
-        ? PERMISSIONS.IOS.PHOTO_LIBRARY
-        : PERMISSIONS.ANDROID.READ_MEDIA_IMAGES;
-
-    const result = await request(platformPermissions);
-
-    if (result === RESULTS.GRANTED) {
-      console.log('사진 첨부 권한이 허용되었습니다.');
-    } else if (result === RESULTS.LIMITED) {
-      console.log('사진 첨부 권한이 제한되었습니다.');
-    } else if (result === RESULTS.BLOCKED || result === RESULTS.DENIED) {
-      console.log('사진 첨부 권한이 거부되었습니다.');
+    if (!libraryGranted) {
       this.showSettingsAlert('사진 첨부');
     }
   };
+
+  // cmmReqCameraPermission = async (): Promise<void> => {
+  //   if (!this.cmmDevicePlatformCheck()) return;
+
+  //   const platformPermissions =
+  //     Platform.OS === 'ios'
+  //       ? PERMISSIONS.IOS.CAMERA
+  //       : PERMISSIONS.ANDROID.CAMERA;
+
+  //   const result = await request(platformPermissions);
+
+  //   if (result === RESULTS.GRANTED) {
+  //     console.log('카메라 권한이 허용되었습니다.');
+  //   } else if (result === RESULTS.BLOCKED || result === RESULTS.DENIED) {
+  //     this.showSettingsAlert('카메라');
+  //   }
+  // };
+
+  // cmmReqPhotoLibraryPermission = async (): Promise<void> => {
+  //   if (!this.cmmDevicePlatformCheck()) return;
+
+  //   const platformPermissions =
+  //     Platform.OS === 'ios'
+  //       ? PERMISSIONS.IOS.PHOTO_LIBRARY
+  //       : PERMISSIONS.ANDROID.READ_MEDIA_IMAGES;
+
+  //   const result = await request(platformPermissions);
+
+  //   if (result === RESULTS.GRANTED) {
+  //     console.log('사진 첨부 권한이 허용되었습니다.');
+  //   } else if (result === RESULTS.LIMITED) {
+  //     console.log('사진 첨부 권한이 제한되었습니다.');
+  //   } else if (result === RESULTS.BLOCKED || result === RESULTS.DENIED) {
+  //     console.log('사진 첨부 권한이 거부되었습니다.');
+  //     this.showSettingsAlert('사진 첨부');
+  //   }
+  // };
 
   showSettingsAlert = (permissionName: string) => {
     Alert.alert(

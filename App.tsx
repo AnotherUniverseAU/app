@@ -17,7 +17,7 @@ import PushNotification from 'react-native-push-notification';
 const App = () => {
   // const basicUrl = 'http://10.0.2.2:3000/'; // 안드로이드 에뮬레이터
   // const basicUrl = 'http://127.0.0.1:3000/chatroom/6627927e60cd66ee2df868f6'; // ios 에뮬레이터
-  // const basicUrl = 'http://127.0.0.1:3000/create/'; // ios 에뮬레이터
+  // const basicUrl = 'http://127.0.0.1:3000/create'; // ios 에뮬레이터
   const basicUrl = 'https://kind-pebble-0020f5710.5.azurestaticapps.net'; //실제 배포 주소
 
   const webViewRef = useRef<any>(null);
@@ -27,9 +27,30 @@ const App = () => {
   const [sendFCMToken, setSendFCMToken] = useState<boolean>(false);
   const [safeArea, setSafeArea] = useState<boolean>(false);
 
-  useEffect(() => {
-    getFcmToken(); // 앱이 시작할 때마다 FCM 토큰을 받아오도록 설정
-  }, []);
+  // useEffect(() => {
+  //   const checkPermissionsAndFetchToken = async () => {
+  //     if (Platform.OS === 'ios') {
+  //       // Check and request permissions on iOS.
+  //       const authStatus = await messaging().requestPermission();
+  //       if (
+  //         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+  //         authStatus === messaging.AuthorizationStatus.PROVISIONAL
+  //       ) {
+  //         console.log('Authorization status:', authStatus);
+  //         getFcmToken(); // Now safe to fetch the token
+  //       } else {
+  //         console.log('Notification permission denied');
+  //         // Optionally, alert the user that notification permissions are needed.
+  //       }
+  //     } else {
+  //       // On Android, you might check or ensure permissions differently.
+  //       // Here's a simplified version; adjust according to your app's needs.
+  //       getFcmToken();
+  //     }
+  //   };
+
+  //   checkPermissionsAndFetchToken();
+  // }, []);
 
   //component에서 webview 직접 활용하기 위해 필요
   useEffect(() => {
@@ -42,15 +63,24 @@ const App = () => {
     AsyncStorage.getItem('isFirstAccess').then(value => {
       if (value === null) {
         console.log('처음 접속하는 유저입니다');
+        // Conditional permission requests based on platform
         if (Platform.OS === 'android') {
           createChannelForAndroid();
-          requestPushPermissionForAndroid();
+          requestPushPermissionForAndroid().then(() => {
+            AsyncStorage.setItem('isFirstAccess', 'NO').then(() => {
+              getFcmToken(); // Call after permissions are handled and first access is updated
+            });
+          });
         } else {
-          reRequestPushPermissionForiOS();
+          reRequestPushPermissionForiOS().then(() => {
+            AsyncStorage.setItem('isFirstAccess', 'NO').then(() => {
+              getFcmToken(); // Call after permissions are handled and first access is updated
+            });
+          });
         }
-        AsyncStorage.setItem('isFirstAccess', 'NO');
       } else {
         console.log('재접속하는 유저입니다.');
+        getFcmToken(); // Call immediately if not first access
       }
     });
 
@@ -108,7 +138,6 @@ const App = () => {
       const status = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
       );
-      // await getFcmToken();
       if (status === PermissionsAndroid.RESULTS.GRANTED) {
         console.log('알림 권한 허용됨');
       } else {
@@ -146,8 +175,8 @@ const App = () => {
 
     try {
       const authStatus = await messaging().requestPermission();
+      await new Promise(resolve => setTimeout(resolve, 2000));
       console.log('Authorization status:', authStatus);
-      // await getFcmToken();
       if (authStatus === messaging.AuthorizationStatus.DENIED) {
         Alert.alert(
           '캐릭터가 보내는 채팅을 놓칠 수 있어요🥲',
@@ -200,19 +229,24 @@ const App = () => {
 
   const getFcmToken = async () => {
     try {
-      console.log('[+] FCM 토큰을 받는 중...');
-      new Promise(resolve => setTimeout(resolve, 5000));
+      new Promise(resolve => setTimeout(resolve, 2000));
       const token = await messaging().getToken();
-      new Promise(resolve => setTimeout(resolve, 5000));
-      console.log('token:', token);
+      new Promise(resolve => setTimeout(resolve, 2000));
+      AsyncStorage.setItem('fcmToken', token);
+      Alert.alert('[+] FCM Token outside(app):: ', token);
       if (token) {
         console.log('[+] FCM Token :: ', token);
+        Alert.alert('[+] FCM Token (app) :: ', token);
         setFcmToken(token); // 토큰 상태 업데이트
       } else {
-        console.log('FCM Token을 받지 못했습니다.');
+        console.log('FCM 토큰이 존재하지 않습니다.');
       }
-    } catch (error) {
-      console.log('FCM 토큰을 받는 데 실패했습니다.', error);
+    } catch (error: any) {
+      console.error('FCM 토큰을 받는 데 실패했습니다. 오류: ', error);
+      Alert.alert(
+        'FCM 토큰 오류',
+        `FCM 토큰을 받는 데 실패했습니다: ${error.message}`,
+      );
     }
   };
 
@@ -235,10 +269,8 @@ const App = () => {
   const onMessage = async (event: any) => {
     const message = JSON.parse(event.nativeEvent.data);
 
-    if (message.type === 'REQUEST_PERMISSIONS') {
-      PermissionUtil.cmmReqCameraPermission().finally(() => {
-        PermissionUtil.cmmReqPhotoLibraryPermission();
-      });
+    if (message.type == 'REQUEST_PERMISSIONS_CHECK') {
+      PermissionUtil.cmmCheckAndSendPermissions();
     } else if (message.type === 'OPEN_APP_SETTINGS') {
       if (Platform.OS === 'android') {
         Linking.openSettings().catch(err =>
@@ -252,19 +284,15 @@ const App = () => {
     } else if (message.type === 'FCM_TOKEN_REQUESTS') {
       setSendFCMToken(true);
       setSafeArea(false);
-    } else if (message.type == 'REQUEST_PERMISSIONS_CHECK') {
-      PermissionUtil.cmmCheckAndSendPermissions();
     } else if (message.type == 'ADD_SAFETY_AREA') {
       setSafeArea(true);
     }
   };
 
   useEffect(() => {
-    if (fcmToken) {
-      webViewRef.current.postMessage(
-        JSON.stringify({type: 'FCM_TOKEN_RECEIVE', token: fcmToken}),
-      );
-    }
+    webViewRef.current.postMessage(
+      JSON.stringify({type: 'FCM_TOKEN_RECEIVE', token: fcmToken}),
+    );
   }, [sendFCMToken]);
 
   const styles = StyleSheet.create({
