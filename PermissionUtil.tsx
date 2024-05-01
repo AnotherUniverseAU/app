@@ -5,13 +5,49 @@ import {
   RESULTS,
   request,
   openSettings,
+  openPhotoPicker,
 } from 'react-native-permissions';
+import {launchImageLibrary} from 'react-native-image-picker';
 
 class PermissionUtil {
   webViewRef = null;
   setWebViewRef = (ref: any) => {
     this.webViewRef = ref;
   };
+
+  // openPhotoPicker = async () => {
+  //   const options = {
+  //     mediaType: 'photo',
+  //     quality: 1,
+  //     selectionLimit: 0, // No limit on the number of images
+  //   };
+
+  //   launchImageLibrary(options as any, response => {
+  //     if (response.didCancel) {
+  //       console.log('User cancelled image picker');
+  //     } else if (response.errorMessage) {
+  //       console.log('ImagePicker Error: ', response.errorMessage);
+  //     } else {
+  //       const imageUris = (response.assets as any).map(
+  //         (asset: any) => asset.uri,
+  //       );
+  //       Alert.alert('imageUris', JSON.stringify(imageUris));
+  //       // this.webViewRef.postMessage(
+  //       //   JSON.stringify({type: 'IMAGE_URIS', imageUris}),
+  //       // );
+  //       if (this.webViewRef) {
+  //         const imageUris = (response.assets as any).map(
+  //           (asset: any) => asset.uri,
+  //         );
+  //         Alert.alert('imageUris', JSON.stringify(imageUris));
+  //         // this.webViewRef.postMessage(
+  //         //   JSON.stringify({type: 'IMAGE_URIS', imageUris}),
+  //         // );
+  //       }
+  //     }
+  //   });
+  // };
+
   cmmDevicePlatformCheck = (): boolean => {
     return Platform.OS === 'ios' || Platform.OS === 'android';
   };
@@ -33,9 +69,18 @@ class PermissionUtil {
       request(libraryPermission),
     ]);
 
+    // if (libraryResult === RESULTS.LIMITED) {
+    //   const photos = await openPhotoPicker().catch(() => {
+    //     console.warn('Cannot open photo library picker');
+    //   });
+
+    //   Alert.alert(photos);
+    // }
+    // if (libraryResult === RESULTS.LIMITED) {
+    //   openPhotoPicker();
+    // }
     const cameraGranted = cameraResult === RESULTS.GRANTED;
-    const libraryGranted =
-      libraryResult === RESULTS.GRANTED || libraryResult === RESULTS.LIMITED;
+    const libraryGranted = libraryResult === RESULTS.GRANTED || RESULTS.LIMITED;
 
     // 결과를 웹뷰로 전송
     if (this.webViewRef) {
