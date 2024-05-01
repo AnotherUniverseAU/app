@@ -15,6 +15,8 @@ import PermissionUtil from './PermissionUtil.tsx';
 import PushNotification from 'react-native-push-notification';
 import axios from 'axios';
 
+// import {NativeModules} from 'react-native';
+
 const App = () => {
   // const basicUrl = 'http://10.0.2.2:3000/'; // 안드로이드 에뮬레이터
   // const basicUrl = 'http://127.0.0.1:3000/chatroom/6627927e60cd66ee2df868f6'; // ios 에뮬레이터
@@ -27,35 +29,27 @@ const App = () => {
 
   const [webViewUrl, setWebViewUrl] = useState(basicUrl); // 기본 URL 설정
   const [fcmToken, setFcmToken] = useState<string | null>(null);
-  const [safeArea, setSafeArea] = useState<boolean>(false);
+  const [safeArea, setSafeArea] = useState<boolean>(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [hasAccessTokenUpdate, setHasAccessTokenUpdate] =
     useState<boolean>(false);
 
-  // useEffect(() => {
-  //   const checkPermissionsAndFetchToken = async () => {
-  //     if (Platform.OS === 'ios') {
-  //       // Check and request permissions on iOS.
-  //       const authStatus = await messaging().requestPermission();
-  //       if (
-  //         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-  //         authStatus === messaging.AuthorizationStatus.PROVISIONAL
-  //       ) {
-  //         console.log('Authorization status:', authStatus);
-  //         getFcmToken(); // Now safe to fetch the token
-  //       } else {
-  //         console.log('Notification permission denied');
-  //         // Optionally, alert the user that notification permissions are needed.
-  //       }
+  // //////////////////////제한된 사진 접근 테스트(폐기)//////////////////
+  // const {PhotoLibraryManager} = NativeModules;
+  // const onMessageReceived = () => {
+  //   PhotoLibraryManager.fetchLimitedPhotos((error: any, assets: any) => {
+  //     if (error) {
+  //       Alert.alert(JSON.stringify({error}));
   //     } else {
-  //       // On Android, you might check or ensure permissions differently.
-  //       // Here's a simplified version; adjust according to your app's needs.
-  //       getFcmToken();
+  //       Alert.alert(JSON.stringify({assets}));
   //     }
-  //   };
+  //   });
+  // };
 
-  //   checkPermissionsAndFetchToken();
+  // useEffect(() => {
+  //   onMessageReceived();
   // }, []);
+  // //////////////////////////////////////////////////
 
   //component에서 webview 직접 활용하기 위해 필요
   useEffect(() => {
@@ -234,9 +228,9 @@ const App = () => {
 
   const getFcmToken = async () => {
     try {
-      new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       const token = await messaging().getToken();
-      new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       AsyncStorage.setItem('fcmToken', token);
       // Alert.alert('[+] FCM Token outside(app):: ', token);
       if (token) {
@@ -248,10 +242,10 @@ const App = () => {
       }
     } catch (error: any) {
       console.error('FCM 토큰을 받는 데 실패했습니다. 오류: ', error);
-      Alert.alert(
-        'FCM 토큰 오류',
-        `FCM 토큰을 받는 데 실패했습니다: ${error.message}`,
-      );
+      // Alert.alert(
+      //   'FCM 토큰 오류',
+      //   `FCM 토큰을 받는 데 실패했습니다: ${error.message}`,
+      // );
     }
   };
 
@@ -286,10 +280,10 @@ const App = () => {
           console.error('Failed to open app settings:', err),
         );
       }
-    } else if (message.type === 'REMOVE_SAFETY_AREA') {
-      setSafeArea(false);
-    } else if (message.type == 'ADD_SAFETY_AREA') {
-      setSafeArea(true);
+      // } else if (message.type === 'REMOVE_SAFETY_AREA') {
+      //   setSafeArea(false);
+      // } else if (message.type == 'ADD_SAFETY_AREA') {
+      //   setSafeArea(true);
     } else if (message.type == 'ACCESS_TOKEN') {
       setAccessToken(message.ACCESS_TOKEN);
       // Alert.alert('Access Token', message.ACCESS_TOKEN);
@@ -301,25 +295,26 @@ const App = () => {
     // Alert.alert('FCM Token', fcmToken as any);
     // Alert.alert('Access Token', accessToken as any);
     if (accessToken && !hasAccessTokenUpdate) {
-      axios
-        .post(
-          `${BASE_URL}/user/fcm-token`,
-          {fcmToken: fcmToken},
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
+      if (fcmToken !== null) {
+        axios
+          .post(
+            `${BASE_URL}/user/fcm-token`,
+            {fcmToken: fcmToken},
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
             },
-          },
-        )
-        .then(response => {
-          console.log('Token registration successful', response);
-          // Alert.alert('Token registration successful', response.data);
-        })
-        .catch(error => {
-          console.error('Token registration failed', error);
-          // Alert.alert('Token registration failed', error.response);
-        });
-
+          )
+          .then(response => {
+            console.log('Token registration successful', response);
+            // Alert.alert('Token registration successful', response.data);
+          })
+          .catch(error => {
+            console.error('Token registration failed', error);
+            // Alert.alert('Token registration failed', error.response);
+          });
+      }
       setHasAccessTokenUpdate(true);
     }
   }, [accessToken]);
@@ -337,17 +332,8 @@ const App = () => {
     },
   });
 
-  return safeArea ? (
-    <SafeAreaView style={styles.flexContainer}>
-      <WebView
-        ref={webViewRef}
-        source={{uri: webViewUrl}}
-        onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest} // iOS에서 사용
-        shouldOverrideUrlLoading={handleShouldStartLoadWithRequest} // Android에서 사용
-        onMessage={onMessage}
-      />
-    </SafeAreaView>
-  ) : (
+  // return (
+  return (
     <View style={styles.flexContainer}>
       <WebView
         ref={webViewRef}
@@ -355,6 +341,9 @@ const App = () => {
         onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest} // iOS에서 사용
         shouldOverrideUrlLoading={handleShouldStartLoadWithRequest} // Android에서 사용
         onMessage={onMessage}
+        onContentProcessDidTerminate={() => {
+          webViewRef.current?.reload();
+        }}
       />
     </View>
   );
