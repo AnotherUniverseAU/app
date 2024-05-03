@@ -6,7 +6,6 @@ import {
   Alert,
   Platform,
   PermissionsAndroid,
-  SafeAreaView,
 } from 'react-native';
 import {WebView} from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,7 +19,7 @@ import axios from 'axios';
 const App = () => {
   // const basicUrl = 'http://10.0.2.2:3000/'; // 안드로이드 에뮬레이터
   // const basicUrl = 'http://127.0.0.1:3000/chatroom/6627927e60cd66ee2df868f6'; // ios 에뮬레이터
-  // const basicUrl = 'http://127.0.0.1:3000/create'; // ios 에뮬레이터
+  // const basicUrl = 'http://127.0.0.1:3000'; // ios 에뮬레이터
   const basicUrl = 'https://kind-pebble-0020f5710.5.azurestaticapps.net'; //실제 배포 주소
   const BASE_URL =
     'https://anotheruniverse-backend.delightfuldune-c082bcd0.koreacentral.azurecontainerapps.io';
@@ -50,6 +49,59 @@ const App = () => {
   //   onMessageReceived();
   // }, []);
   // //////////////////////////////////////////////////
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | undefined;
+
+    // FCM 토큰을 갱신하고 성공 여부에 따라 인터벌을 관리하는 함수
+    const getAndUpdateFcmToken = async () => {
+      try {
+        const token = await messaging().getToken();
+        if (token) {
+          console.log('[+] FCM Token :: ', token);
+          setFcmToken(token);
+          if (intervalId) {
+            axios
+              .post(
+                `${BASE_URL}/user/fcm-token`,
+                {fcmToken: fcmToken},
+                {
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                },
+              )
+              .then(response => {
+                console.log('Token registration successful', response);
+                // Alert.alert('Token registration successful', response.data);
+              })
+              .catch(error => {
+                console.error('Token registration failed', error);
+                // Alert.alert('Token registration failed', error.response);
+              });
+            clearInterval(intervalId); // 토큰이 성공적으로 받아졌으면 인터벌 중지
+          }
+        }
+      } catch (error) {
+        console.error('FCM 토큰을 받는 데 실패했습니다. 오류: ', error);
+      }
+    };
+
+    // 처음에 토큰을 요청
+    getAndUpdateFcmToken();
+
+    // 10초마다 토큰 갱신 함수를 반복 호출
+    intervalId = setInterval(() => {
+      getAndUpdateFcmToken();
+    }, 10000);
+
+    // 컴포넌트 언마운트 시 인터벌을 정리합니다.
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, []);
 
   //component에서 webview 직접 활용하기 위해 필요
   useEffect(() => {
@@ -174,9 +226,10 @@ const App = () => {
 
     try {
       const authStatus = await messaging().requestPermission();
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const authStatus2 = await messaging().requestPermission();
       console.log('Authorization status:', authStatus);
-      if (authStatus === messaging.AuthorizationStatus.DENIED) {
+      console.log('Authorization status:', authStatus2);
+      if (authStatus2 === messaging.AuthorizationStatus.DENIED) {
         Alert.alert(
           '캐릭터가 보내는 채팅을 놓칠 수 있어요🥲',
           '설정 > 알림 > AU 으로 이동하여 알림을 허용해주세요.',
@@ -228,31 +281,33 @@ const App = () => {
 
   const getFcmToken = async () => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // // 장치를 원격 메시지 수신용으로 등록합니다.
+      // const authStatus = await messaging().requestPermission();
+      // if (authStatus === messaging.AuthorizationStatus.DENIED) {
+      //   await messaging().registerDeviceForRemoteMessages();
+      // }
+      // await new Promise(resolve => setTimeout(resolve, 5000));
+      // FCM 토큰을 받습니다.
       const token = await messaging().getToken();
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      AsyncStorage.setItem('fcmToken', token);
-      // Alert.alert('[+] FCM Token outside(app):: ', token);
+      // await new Promise(resolve => setTimeout(resolve, 2000));
+      // 토큰을 AsyncStorage에 저장합니다.
       if (token) {
-        // console.log('[+] FCM Token :: ', token);
-        // Alert.alert('[+] FCM Token (app) :: ', token);
-        setFcmToken(token); // 토큰 상태 업데이트
+        await AsyncStorage.setItem('fcmToken', token);
+        setFcmToken(token); // 토큰 상태를 업데이트합니다.
+        console.log('[+] FCM Token :: ', token);
       } else {
         console.log('FCM 토큰이 존재하지 않습니다.');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('FCM 토큰을 받는 데 실패했습니다. 오류: ', error);
-      // Alert.alert(
-      //   'FCM 토큰 오류',
-      //   `FCM 토큰을 받는 데 실패했습니다: ${error.message}`,
-      // );
+      // 오류에 대한 추가 대응을 여기에 작성할 수 있습니다.
     }
   };
 
   // 웹뷰 상에서 URL을 열기 위한 함수
   const handleShouldStartLoadWithRequest = (request: any) => {
     // 커스텀 URL 스키마가 감지되면 Linking을 사용하여 열기
-    if (request.url.startsWith('https://pf.kakao.com/_tmxfFG/chat')) {
+    if (request.url.startsWith('https://talk.naver.com/W5ZLRN')) {
       Linking.openURL(request.url).catch(err => {
         console.error('Failed to open URL:', err);
       });

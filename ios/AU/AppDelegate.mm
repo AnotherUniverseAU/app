@@ -12,35 +12,34 @@
 
 @implementation AppDelegate
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-  // Branch 관련
-  [RNBranch initSessionWithLaunchOptions:launchOptions isReferrable:YES];
-  // Firebase 구성
-  [FIRApp configure];
-  // Firebase 메시징 대리자 설정
-  [FIRMessaging messaging].delegate = self;
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    [RNBranch initSessionWithLaunchOptions:launchOptions isReferrable:YES];
+    [FIRApp configure];
 
-  // iOS 10 이상을 위한 알림 센터 (UserNotificationCenter) 설정
-  if ([UNUserNotificationCenter class] != nil) {
-    [UNUserNotificationCenter currentNotificationCenter].delegate = self;
-    UNAuthorizationOptions authOptions = UNAuthorizationOptionAlert |
-        UNAuthorizationOptionSound | UNAuthorizationOptionBadge;
-    [[UNUserNotificationCenter currentNotificationCenter]
-        requestAuthorizationWithOptions:authOptions
-        completionHandler:^(BOOL granted, NSError * _Nullable error) {
-          // 에러 처리
-        }];
-  }
+    if ([UNUserNotificationCenter class] != nil) {
+        [UNUserNotificationCenter currentNotificationCenter].delegate = self;
+        UNAuthorizationOptions authOptions = UNAuthorizationOptionAlert |
+            UNAuthorizationOptionSound | UNAuthorizationOptionBadge;
+        [[UNUserNotificationCenter currentNotificationCenter]
+            requestAuthorizationWithOptions:authOptions
+            completionHandler:^(BOOL granted, NSError * _Nullable error) {
+                // [application registerForRemoteNotifications];
+            }];
+    } else {
+        // [application registerForRemoteNotifications];
+    }
 
-  // 앱이 FCM 알림을 수신할 수 있도록 APNs에 등록
-  [application registerForRemoteNotifications];
+    [application registerForRemoteNotifications];
 
-  self.moduleName = @"AU";
-  self.initialProps = @{};
 
-  return [super application:application didFinishLaunchingWithOptions:launchOptions];
+
+    self.moduleName = @"AU";
+    self.initialProps = @{};
+
+    return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
+
+
 
 // Branch 관련 추가
 - (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
@@ -61,11 +60,10 @@
   // 필요한 경우 이 토큰을 앱 서버에 전송
 }
 
-// AppDelegate.mm 파일에 추가
+
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
   // 여기에서 userInfo를 사용하여 필요한 작업을 수행합니다.
   NSLog(@"Received remote notification: %@", userInfo);
-
   completionHandler(UIBackgroundFetchResultNewData);
 }
 
@@ -93,7 +91,6 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
 {
   NSDictionary *userInfo = response.notification.request.content.userInfo;
   // 알림으로부터 데이터 처리
-
   completionHandler();
 }
 
@@ -107,6 +104,24 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
 #endif
 }
 
+
+// // APNs 등록 성공 시 호출됩니다.
+// - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+//     NSLog(@"Device registered with APNs.");
+//     [[FIRMessaging messaging] tokenWithCompletion:^(NSString * _Nullable token, NSError * _Nullable error) {
+//         if (error != nil) {
+//             NSLog(@"Error fetching remote access token: %@", error);
+//         } else {
+//             NSLog(@"FCM registration token: %@", token);
+//             // 필요한 경우 이 토큰을 앱 서버에 전송
+//         }
+//     }];
+// }
+
+// // APNs 등록 실패 시 호출됩니다.
+// - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
+//     NSLog(@"Failed to register with APNs: %@", error);
+// }
 
 
 @end
