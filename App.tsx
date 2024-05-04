@@ -28,10 +28,8 @@ const App = () => {
 
   const [webViewUrl, setWebViewUrl] = useState(basicUrl); // 기본 URL 설정
   const [fcmToken, setFcmToken] = useState<string | null>(null);
-  const [safeArea, setSafeArea] = useState<boolean>(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [hasAccessTokenUpdate, setHasAccessTokenUpdate] =
-    useState<boolean>(false);
+  const [tokenSentToServer, setTokenSentToServer] = useState<boolean>(false);
 
   // //////////////////////제한된 사진 접근 테스트(폐기)//////////////////
   // const {PhotoLibraryManager} = NativeModules;
@@ -48,60 +46,61 @@ const App = () => {
   // useEffect(() => {
   //   onMessageReceived();
   // }, []);
-  // //////////////////////////////////////////////////
+  // ////////////////////interval로 fcm토큰 재생성 및 전달 로직//////////////////////////////
+  // useEffect(() => {
+  //   let intervalId: NodeJS.Timeout | undefined;
 
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout | undefined;
+  //   // FCM 토큰을 갱신하고 성공 여부에 따라 인터벌을 관리하는 함수
+  //   const getAndUpdateFcmToken = async () => {
+  //     try {
+  //       const token = await messaging().getToken();
+  //       const accessToken = await AsyncStorage.getItem('accessToken');
 
-    // FCM 토큰을 갱신하고 성공 여부에 따라 인터벌을 관리하는 함수
-    const getAndUpdateFcmToken = async () => {
-      try {
-        const token = await messaging().getToken();
-        if (token) {
-          console.log('[+] FCM Token :: ', token);
-          setFcmToken(token);
-          if (intervalId) {
-            axios
-              .post(
-                `${BASE_URL}/user/fcm-token`,
-                {fcmToken: fcmToken},
-                {
-                  headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                  },
-                },
-              )
-              .then(response => {
-                console.log('Token registration successful', response);
-                // Alert.alert('Token registration successful', response.data);
-              })
-              .catch(error => {
-                console.error('Token registration failed', error);
-                // Alert.alert('Token registration failed', error.response);
-              });
-            clearInterval(intervalId); // 토큰이 성공적으로 받아졌으면 인터벌 중지
-          }
-        }
-      } catch (error) {
-        console.error('FCM 토큰을 받는 데 실패했습니다. 오류: ', error);
-      }
-    };
+  //       if (token && accessToken) {
+  //         console.log('[+] FCM Token1 :: ', token);
+  //         setFcmToken(token);
+  //         if (intervalId) {
+  //           axios
+  //             .post(
+  //               `${BASE_URL}/user/fcm-token`,
+  //               {fcmToken: fcmToken},
+  //               {
+  //                 headers: {
+  //                   Authorization: `Bearer ${accessToken}`,
+  //                 },
+  //               },
+  //             )
+  //             .then(response => {
+  //               console.log('Token registration successful', response);
+  //               // Alert.alert('Token registration successful', response.data);
+  //             })
+  //             .catch(error => {
+  //               console.error('Token registration failed1', error);
+  //               // Alert.alert('Token registration failed', error.response);
+  //             });
+  //           clearInterval(intervalId); // 토큰이 성공적으로 받아졌으면 인터벌 중지
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('FCM 토큰을 받는 데 실패했습니다. 오류: ', error);
+  //     }
+  //   };
 
-    // 처음에 토큰을 요청
-    getAndUpdateFcmToken();
+  //   // 처음에 토큰을 요청
+  //   getAndUpdateFcmToken();
 
-    // 10초마다 토큰 갱신 함수를 반복 호출
-    intervalId = setInterval(() => {
-      getAndUpdateFcmToken();
-    }, 10000);
+  //   // 10초마다 토큰 갱신 함수를 반복 호출
+  //   intervalId = setInterval(() => {
+  //     getAndUpdateFcmToken();
+  //   }, 10000);
 
-    // 컴포넌트 언마운트 시 인터벌을 정리합니다.
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, []);
+  //   // 컴포넌트 언마운트 시 인터벌을 정리합니다.
+  //   return () => {
+  //     if (intervalId) {
+  //       clearInterval(intervalId);
+  //     }
+  //   };
+  // }, []);
 
   //component에서 webview 직접 활용하기 위해 필요
   useEffect(() => {
@@ -135,7 +134,7 @@ const App = () => {
       }
     });
 
-    // // Foreground에서 FCM 알림 수신
+    // // Foreground에서 FCM 알림 수신////////
     // messaging().onMessage(async remoteMessage => {
     //   console.log('Received in foreground:', remoteMessage);
     // });
@@ -160,13 +159,7 @@ const App = () => {
           }
         }
       });
-    // 컴포넌트 언마운트 시 인터벌 정리
   }, []);
-
-  // const checkAuthStatus = async () => {
-  //   const authStatus = await messaging().requestPermission();
-  //   console.log('Authorization status out RequestFunction:', authStatus);
-  // };
 
   // 안드로이드 에서 FCM 알림을 받을 채널 생성
   const createChannelForAndroid = async () =>
@@ -221,35 +214,29 @@ const App = () => {
    iOS 사용자 알림 권한 요청
    */
   const reRequestPushPermissionForiOS = async () => {
-    // 1초 대기를 위한 Promise 구현
-    // await new Promise(resolve => setTimeout(resolve, 3000));
-
-    try {
-      const authStatus = await messaging().requestPermission();
-      const authStatus2 = await messaging().requestPermission();
-      console.log('Authorization status:', authStatus);
-      console.log('Authorization status:', authStatus2);
-      if (authStatus2 === messaging.AuthorizationStatus.DENIED) {
-        Alert.alert(
-          '캐릭터가 보내는 채팅을 놓칠 수 있어요🥲',
-          '설정 > 알림 > AU 으로 이동하여 알림을 허용해주세요.',
-          [
-            {
-              text: '설정으로 이동',
-              onPress: () => {
-                Linking.openURL('app-settings:');
-              },
+    let authStatus = await messaging().requestPermission();
+    if (authStatus === messaging.AuthorizationStatus.NOT_DETERMINED) {
+      authStatus = await messaging().requestPermission();
+    }
+    console.log('Authorization status:', authStatus);
+    if (authStatus === messaging.AuthorizationStatus.DENIED) {
+      Alert.alert(
+        '캐릭터가 보내는 채팅을 놓칠 수 있어요🥲',
+        '설정 > 알림 > AU 으로 이동하여 알림을 허용해주세요.',
+        [
+          {
+            text: '설정으로 이동',
+            onPress: () => {
+              Linking.openURL('app-settings:');
             },
-            {
-              text: '다음에 하기',
-              style: 'cancel',
-            },
-          ],
-          {cancelable: false},
-        );
-      }
-    } catch (error) {
-      console.error('Error requesting permission:', error);
+          },
+          {
+            text: '다음에 하기',
+            style: 'cancel',
+          },
+        ],
+        {cancelable: false},
+      );
     }
   };
 
@@ -279,28 +266,18 @@ const App = () => {
   //   );
   // };
 
+  ////////////////////////////FCM 토큰 받아오는 함수//////////////////////////////
   const getFcmToken = async () => {
     try {
-      // // 장치를 원격 메시지 수신용으로 등록합니다.
-      // const authStatus = await messaging().requestPermission();
-      // if (authStatus === messaging.AuthorizationStatus.DENIED) {
-      //   await messaging().registerDeviceForRemoteMessages();
-      // }
-      // await new Promise(resolve => setTimeout(resolve, 5000));
-      // FCM 토큰을 받습니다.
       const token = await messaging().getToken();
-      // await new Promise(resolve => setTimeout(resolve, 2000));
-      // 토큰을 AsyncStorage에 저장합니다.
       if (token) {
-        await AsyncStorage.setItem('fcmToken', token);
-        setFcmToken(token); // 토큰 상태를 업데이트합니다.
+        setFcmToken(token);
         console.log('[+] FCM Token :: ', token);
       } else {
         console.log('FCM 토큰이 존재하지 않습니다.');
       }
     } catch (error) {
       console.error('FCM 토큰을 받는 데 실패했습니다. 오류: ', error);
-      // 오류에 대한 추가 대응을 여기에 작성할 수 있습니다.
     }
   };
 
@@ -341,44 +318,37 @@ const App = () => {
       //   setSafeArea(true);
     } else if (message.type == 'ACCESS_TOKEN') {
       setAccessToken(message.ACCESS_TOKEN);
-      // Alert.alert('Access Token', message.ACCESS_TOKEN);
-      // console.log('Access Token:', message.ACCESS_TOKEN);
     }
   };
 
+  ////////////////////////////FCM 토큰 서버 전달 로직//////////////////////////////
   useEffect(() => {
     // Alert.alert('FCM Token', fcmToken as any);
-    // Alert.alert('Access Token', accessToken as any);
-    if (accessToken && !hasAccessTokenUpdate) {
-      if (fcmToken !== null) {
-        axios
-          .post(
-            `${BASE_URL}/user/fcm-token`,
-            {fcmToken: fcmToken},
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
+    const sendFcmTokenToServer = async () => {
+      if (accessToken && fcmToken && !tokenSentToServer) {
+        if (fcmToken !== null) {
+          axios
+            .post(
+              `${BASE_URL}/user/fcm-token`,
+              {fcmToken: fcmToken},
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                },
               },
-            },
-          )
-          .then(response => {
-            console.log('Token registration successful', response);
-            // Alert.alert('Token registration successful', response.data);
-          })
-          .catch(error => {
-            console.error('Token registration failed', error);
-            // Alert.alert('Token registration failed', error.response);
-          });
+            )
+            .then(response => {
+              console.log('Token registration successful', response);
+              setTokenSentToServer(true);
+            })
+            .catch(error => {
+              console.error('Token registration failed', error);
+            });
+        }
       }
-      setHasAccessTokenUpdate(true);
-    }
+    };
+    sendFcmTokenToServer();
   }, [accessToken]);
-
-  // useEffect(() => {
-  //   webViewRef.current.postMessage(
-  //     JSON.stringify({type: 'FCM_TOKEN_RECEIVE', token: fcmToken}),
-  //   );
-  // }, [sendFCMToken]);
 
   const styles = StyleSheet.create({
     flexContainer: {

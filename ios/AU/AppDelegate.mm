@@ -15,6 +15,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     [RNBranch initSessionWithLaunchOptions:launchOptions isReferrable:YES];
     [FIRApp configure];
+    [FIRMessaging messaging].delegate = self;
 
     if ([UNUserNotificationCenter class] != nil) {
         [UNUserNotificationCenter currentNotificationCenter].delegate = self;
