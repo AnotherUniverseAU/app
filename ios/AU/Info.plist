@@ -39,8 +39,8 @@
 	<string>사진 첨부 권한을 이용할 수 있습니다. (필수권한)</string>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string>bluetooth-peripheral</string>
 		<string>fetch</string>
+		<string>remote-notification</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
