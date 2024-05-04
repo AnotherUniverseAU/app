@@ -5,6 +5,10 @@
 #import <FirebaseMessaging/FirebaseMessaging.h>
 //Branch 관련 import 추가
 #import <RNBranch/RNBranch.h>
+//Facebook SDK import 추가
+#import <FBSDKCoreKit/FBSDKCoreKit.h>
+#import <React/RCTLinkingManager.h>
+
 
 // UNUserNotificationCenterDelegate 및 FIRMessagingDelegate 추가
 @interface AppDelegate () <UNUserNotificationCenterDelegate, FIRMessagingDelegate>
@@ -13,7 +17,11 @@
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+  // Facebook SDK 초기화
+    [[FBSDKApplicationDelegate sharedInstance] application:application didFinishLaunchingWithOptions:launchOptions];
+    // Branch 초기화
     [RNBranch initSessionWithLaunchOptions:launchOptions isReferrable:YES];
+    // Firebase 초기화
     [FIRApp configure];
     [FIRMessaging messaging].delegate = self;
 
@@ -42,11 +50,11 @@
 
 
 
-// Branch 관련 추가
-- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
-    [RNBranch application:app openURL:url options:options];
-  return YES;
-}
+//// Branch 관련 추가
+//- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+//    [RNBranch application:app openURL:url options:options];
+//  return YES;
+//}
 
 // Branch 관련 추가
 - (BOOL)application:(UIApplication *)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
@@ -105,24 +113,24 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
 #endif
 }
 
+//facebook sdk 관련 추가
+- (BOOL)application:(UIApplication *)application
+            openURL:(NSURL *)url
+            options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
+  [RNBranch application:application openURL:url options:options];
+  if ([[FBSDKApplicationDelegate sharedInstance] application:application openURL:url options:options]) {
+    return YES;
+  }
 
-// // APNs 등록 성공 시 호출됩니다.
-// - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-//     NSLog(@"Device registered with APNs.");
-//     [[FIRMessaging messaging] tokenWithCompletion:^(NSString * _Nullable token, NSError * _Nullable error) {
-//         if (error != nil) {
-//             NSLog(@"Error fetching remote access token: %@", error);
-//         } else {
-//             NSLog(@"FCM registration token: %@", token);
-//             // 필요한 경우 이 토큰을 앱 서버에 전송
-//         }
-//     }];
-// }
+  if ([RCTLinkingManager application:application openURL:url options:options]) {
+    return YES;
+  }
 
-// // APNs 등록 실패 시 호출됩니다.
-// - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
-//     NSLog(@"Failed to register with APNs: %@", error);
-// }
+  return NO;
+}
+
 
 
 @end
+
+
