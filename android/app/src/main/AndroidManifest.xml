@@ -43,9 +43,9 @@
             <action android:name="android.intent.action.VIEW" />
             <category android:name="android.intent.category.DEFAULT" />
             <category android:name="android.intent.category.BROWSABLE" />
-            <data android:scheme="https" android:host="{my-app}.app.link" />
+            <data android:scheme="https" android:host="k32kq.app.link" />
             <!-- example-alternate domain is required for App Links when the Journeys/Web SDK and Deepviews are used inside your website.  -->
-            <data android:scheme="https" android:host="{my-app}-alternate.app.link" />
+            <data android:scheme="https" android:host="k32kq.app.link/Vgxyss7UeJb" />
         </intent-filter>
         <!---->
       </activity>
