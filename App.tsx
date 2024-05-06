@@ -16,8 +16,8 @@ import axios from 'axios';
 import {DeviceEventEmitter} from 'react-native';
 
 const App = () => {
-  // const basicUrl = 'http://10.0.2.2:3000/'; // 안드로이드 에뮬레이터
-  // const basicUrl = 'http://127.0.0.1:3000/chatroom/6627927e60cd66ee2df868f6'; // ios 에뮬레이터
+  // const basicUrl = 'http://10.0.2.2:3000/complain/6627927e60cd66ee2df868f6'; // 안드로이드 에뮬레이터
+  // const basicUrl = 'http://127.0.0.1:3000/complain/6627927e60cd66ee2df868f6'; // ios 에뮬레이터
   // const basicUrl = 'http://127.0.0.1:3000'; // ios 에뮬레이터
   const basicUrl = 'https://kind-pebble-0020f5710.5.azurestaticapps.net'; //실제 배포 주소
   const BASE_URL =
@@ -213,10 +213,10 @@ const App = () => {
    iOS 사용자 알림 권한 요청
    */
   const reRequestPushPermissionForiOS = async () => {
-    let authStatus = await messaging().requestPermission({alert: false});
-    if (authStatus === messaging.AuthorizationStatus.NOT_DETERMINED) {
-      authStatus = await messaging().requestPermission({alert: false});
-    }
+    const authStatus = await messaging().requestPermission();
+    // if (authStatus === messaging.AuthorizationStatus.NOT_DETERMINED) {
+    //   authStatus = await messaging().requestPermission({alert: false});
+    // }
     console.log('Authorization status:', authStatus);
     if (authStatus === messaging.AuthorizationStatus.DENIED) {
       Alert.alert(
