@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">AU</string>
+    <string name="facebook_app_id">960749335722389</string>
+    <string name="facebook_client_token">1c6e7ee98db892b23ff552eaefdd2c15</string>
 </resources>
