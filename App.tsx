@@ -13,8 +13,7 @@ import messaging from '@react-native-firebase/messaging';
 import PermissionUtil from './PermissionUtil.tsx';
 import PushNotification from 'react-native-push-notification';
 import axios from 'axios';
-
-// import {NativeModules} from 'react-native';
+import {DeviceEventEmitter} from 'react-native';
 
 const App = () => {
   // const basicUrl = 'http://10.0.2.2:3000/'; // 안드로이드 에뮬레이터
@@ -142,7 +141,6 @@ const App = () => {
     // 백그라운드 상태에서 알림 클릭 시 해당 라우트로 이동
     messaging().onNotificationOpenedApp((remoteMessage: any) => {
       const route = remoteMessage.data.route;
-      console.log('route: ', basicUrl, route);
       if (route) {
         setWebViewUrl(`${basicUrl}${route}`); // URL 업데이트
       }
@@ -154,6 +152,7 @@ const App = () => {
       .then((remoteMessage: any) => {
         if (remoteMessage) {
           const route = remoteMessage.data.route;
+          console.log('route: ', route);
           if (route) {
             setWebViewUrl(`${basicUrl}${route}`); // URL 업데이트
           }
@@ -214,9 +213,9 @@ const App = () => {
    iOS 사용자 알림 권한 요청
    */
   const reRequestPushPermissionForiOS = async () => {
-    let authStatus = await messaging().requestPermission();
+    let authStatus = await messaging().requestPermission({alert: false});
     if (authStatus === messaging.AuthorizationStatus.NOT_DETERMINED) {
-      authStatus = await messaging().requestPermission();
+      authStatus = await messaging().requestPermission({alert: false});
     }
     console.log('Authorization status:', authStatus);
     if (authStatus === messaging.AuthorizationStatus.DENIED) {
@@ -338,7 +337,7 @@ const App = () => {
               },
             )
             .then(response => {
-              console.log('Token registration successful', response);
+              console.log('Token registration successful', response.data);
               setTokenSentToServer(true);
             })
             .catch(error => {

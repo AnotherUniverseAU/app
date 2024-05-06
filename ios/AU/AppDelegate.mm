@@ -24,6 +24,9 @@
     // Firebase 초기화
     [FIRApp configure];
     [FIRMessaging messaging].delegate = self;
+  
+    //0506 추가
+    self.bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
 
     if ([UNUserNotificationCenter class] != nil) {
         [UNUserNotificationCenter currentNotificationCenter].delegate = self;
@@ -100,8 +103,19 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
 {
   NSDictionary *userInfo = response.notification.request.content.userInfo;
   // 알림으로부터 데이터 처리
+  NSString *route = userInfo[@"data"][@"route"];
+  if (route != nil) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        // RCTEventEmitter를 상속받은 모듈 찾기
+        id eventModule = [self.bridge moduleForName:@"MyEventEmitter"];
+        if ([eventModule respondsToSelector:@selector(sendEventWithName:body:)]) {
+          [eventModule sendEventWithName:@"NavigateToRoute" body:@{@"route": route}];
+        }
+      });
+    }
   completionHandler();
 }
+
 
 // Firebase 메시징 라이브러리의 소스 URL 가져오기
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
