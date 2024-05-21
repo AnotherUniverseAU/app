@@ -67,6 +67,8 @@ target 'AU' do
   pod 'FirebaseFirestore'
   pod 'Firebase/Messaging'
 
+  pod 'TikTokOpenSDK', '~> 5.0.15'
+
 
   use_frameworks! :linkage => :static
   $RNFirebaseAsStaticFramework = true
