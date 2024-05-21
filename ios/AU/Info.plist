@@ -72,6 +72,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>fb960749335722389</string>
+				<string>awge899og1w912l3</string>
 			</array>
 		</dict>
 	</array>
@@ -98,8 +99,15 @@
 		<string>fb-messenger-share-api</string>
 		<string>fbauth2</string>
 		<string>fbshareextension</string>
+  		<string>fb-messenger-api</string>
+		<string>tiktokopensdk</string>
+		<string>tiktoksharesdk</string>
+		<string>snssdk1180</string>
+		<string>snssdk1233</string>
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>TikTokAppID</key>
+	<string>awge899og1w912l3</string>	
 </dict>
 </plist>
