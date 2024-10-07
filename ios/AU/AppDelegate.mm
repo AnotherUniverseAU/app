@@ -1,19 +1,26 @@
 #import "AppDelegate.h"
 #import <React/RCTBundleURLProvider.h>
+#import <React/RCTBridge.h>
 #import <Firebase.h>
+// Firebase Analytics 관련 import 추가
+#import <FirebaseAnalytics/FirebaseAnalytics.h>
 // Firebase Messaging 관련 import 추가
 #import <FirebaseMessaging/FirebaseMessaging.h>
 // Branch 관련 import 추가
 #import <RNBranch/RNBranch.h>
 // Facebook SDK import 추가
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
+#import <FBSDKCoreKit/FBSDKAppEvents.h>
+#import <FBSDKCoreKit/FBSDKApplicationDelegate.h>
 #import <React/RCTLinkingManager.h>
 // Tiktok SDK import 추가
 #import <TikTokOpenSDK/TikTokOpenSDKApplicationDelegate.h>
-
-// UNUserNotificationCenterDelegate 및 FIRMessagingDelegate 추가
-@interface AppDelegate () <UNUserNotificationCenterDelegate, FIRMessagingDelegate, TikTokOpenSDKLogDelegate>
-@end
+// User Notifications import 추가
+#import <UserNotifications/UserNotifications.h>
+// RCTRootView import 추가
+#import <React/RCTRootView.h>
+// Splash Screen 추가
+#import "RNSplashScreen.h"
 
 @implementation AppDelegate
 
@@ -21,23 +28,43 @@
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     [FBSDKAppEvents activateApp];
 }
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Facebook SDK 초기화
     [[FBSDKApplicationDelegate sharedInstance] application:application didFinishLaunchingWithOptions:launchOptions];
+
     // Branch 초기화
     [RNBranch initSessionWithLaunchOptions:launchOptions isReferrable:YES];
+    
     // Firebase 초기화
     [FIRApp configure];
     [FIRMessaging messaging].delegate = self;
 
+    // Firebase Analytics에 앱 실행 로그 보내기
+    [FIRAnalytics logEventWithName:@"app_open"
+                        parameters:@{
+                                     kFIRParameterItemID: @"id-app_open",
+                                     kFIRParameterItemName: @"App Opened",
+                                     kFIRParameterContentType: @"event"
+                                     }];
+
     // Tiktok SDK 초기화
     [[TikTokOpenSDKApplicationDelegate sharedInstance] application:application didFinishLaunchingWithOptions:launchOptions];
-    // TikTok SDK 로그 델리게이트 설정
     [TikTokOpenSDKApplicationDelegate sharedInstance].logDelegate = self;
 
-    // 0506 추가
+    // React Native 설정
     self.bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+    RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:self.bridge
+                                                     moduleName:@"AU"
+                                              initialProperties:self.initialProps];
+
+    rootView.backgroundColor = [UIColor whiteColor];
+
+    // UIWindow 초기화 및 설정
+    self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+    UIViewController *rootViewController = [UIViewController new];
+    rootViewController.view = rootView;
+    self.window.rootViewController = rootViewController;
+    [self.window makeKeyAndVisible];
 
     if ([UNUserNotificationCenter class] != nil) {
         [UNUserNotificationCenter currentNotificationCenter].delegate = self;
@@ -46,19 +73,25 @@
         [[UNUserNotificationCenter currentNotificationCenter]
          requestAuthorizationWithOptions:authOptions
          completionHandler:^(BOOL granted, NSError * _Nullable error) {
-             // [application registerForRemoteNotifications];
+             if (granted) {
+                 dispatch_async(dispatch_get_main_queue(), ^{
+                     [application registerForRemoteNotifications];
+                 });
+             }
          }];
     } else {
-        // [application registerForRemoteNotifications];
+        [application registerForRemoteNotifications];
     }
-
-    [application registerForRemoteNotifications];
 
     self.moduleName = @"AU";
     self.initialProps = @{};
 
-    return [super application:application didFinishLaunchingWithOptions:launchOptions];
+    [RNSplashScreen show];
+
+    return YES;
 }
+
+
 
 // Branch 관련 추가
 - (BOOL)application:(UIApplication *)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
@@ -110,6 +143,7 @@
     return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
 #endif
 }
+
 
 // URL 처리 메소드 통합
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options {

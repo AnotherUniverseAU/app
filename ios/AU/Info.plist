@@ -20,8 +20,49 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb960749335722389</string>
+				<string>awge899og1w912l3</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>FacebookAppID</key>
+	<string>960749335722389</string>
+	<key>FacebookClientToken</key>
+	<string>1c6e7ee98db892b23ff552eaefdd2c15</string>
+	<key>FacebookDisplayName</key>
+	<string>AU</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fbapi20130214</string>
+		<string>fbapi20130410</string>
+		<string>fbapi20130702</string>
+		<string>fbapi20131010</string>
+		<string>fbapi20131219</string>
+		<string>fbapi20140410</string>
+		<string>fbapi20140116</string>
+		<string>fbapi20150313</string>
+		<string>fbapi20150629</string>
+		<string>fbapi20160328</string>
+		<string>fbauth</string>
+		<string>fb-messenger-share-api</string>
+		<string>fbauth2</string>
+		<string>fbshareextension</string>
+		<string>fb-messenger-api</string>
+		<string>tiktokopensdk</string>
+		<string>tiktoksharesdk</string>
+		<string>snssdk1180</string>
+		<string>snssdk1233</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -37,13 +78,15 @@
 	<string></string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>캐릭터가 보내주는 이미지를 생성하기 위해 위 권한이 필요합니다.</string>
+	<key>TikTokAppID</key>
+	<string>awge899og1w912l3</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+	<string>LaunchScreen.storyboard</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
@@ -65,49 +108,5 @@
 	</array>
 	<key>live</key>
 	<string>key_live_pwgJiUfeuxPsZJw2Y7YxOkbautfpxCid</string>
-
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>fb960749335722389</string>
-				<string>awge899og1w912l3</string>
-			</array>
-		</dict>
-	</array>
-	<key>FacebookAppID</key>
-	<string>960749335722389</string>
-	<key>FacebookClientToken</key>
-	<string>1c6e7ee98db892b23ff552eaefdd2c15</string>
-	<key>FacebookDisplayName</key>
-	<string>AU</string>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>fbapi</string>
-		<string>fbapi20130214</string>
-		<string>fbapi20130410</string>
-		<string>fbapi20130702</string>
-		<string>fbapi20131010</string>
-		<string>fbapi20131219</string>
-		<string>fbapi20140410</string>
-		<string>fbapi20140116</string>
-		<string>fbapi20150313</string>
-		<string>fbapi20150629</string>
-		<string>fbapi20160328</string>
-		<string>fbauth</string>
-		<string>fb-messenger-share-api</string>
-		<string>fbauth2</string>
-		<string>fbshareextension</string>
-  		<string>fb-messenger-api</string>
-		<string>tiktokopensdk</string>
-		<string>tiktoksharesdk</string>
-		<string>snssdk1180</string>
-		<string>snssdk1233</string>
-	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>TikTokAppID</key>
-	<string>awge899og1w912l3</string>	
 </dict>
 </plist>

@@ -14,6 +14,7 @@ import PermissionUtil from './PermissionUtil.tsx';
 import PushNotification from 'react-native-push-notification';
 import axios from 'axios';
 import {DeviceEventEmitter} from 'react-native';
+import SplashScreen from 'react-native-splash-screen';
 
 const App = () => {
   // const basicUrl = 'http://10.0.2.2:3000/complain/6627927e60cd66ee2df868f6'; // 안드로이드 에뮬레이터
@@ -100,6 +101,13 @@ const App = () => {
   //     }
   //   };
   // }, []);
+
+  ///스플래시 스크린 활성 시간/////
+  useEffect(() => {
+    setTimeout(() => {
+      SplashScreen.hide();
+    }, 1000);
+  });
 
   //component에서 webview 직접 활용하기 위해 필요
   useEffect(() => {
