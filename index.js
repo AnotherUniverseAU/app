@@ -13,7 +13,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('Message handled in the background!', remoteMessage);
   // 푸시 알림 표시
   PushNotification.localNotification({
-    channelId: 'AU_channel',
+    channelId: 'channel',
     title: remoteMessage.data.title, // 메시지 제목
     message: remoteMessage.data.body, // 메시지 본문
     // bigLargeIcon: remoteMessage.data.android.imageUrl, // 알림 아이콘

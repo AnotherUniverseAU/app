@@ -172,8 +172,8 @@ const App = () => {
   const createChannelForAndroid = async () =>
     PushNotification.createChannel(
       {
-        channelId: 'AU_channel', // 채널 ID
-        channelName: 'AU_Android', // 채널 이름
+        channelId: 'channel', // 채널 ID
+        channelName: 'Android', // 채널 이름
         playSound: true, // 소리 여부
         importance: 4, // 중요도
         vibrate: true, // 진동 여부s
